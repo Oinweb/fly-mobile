@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FLY will help you learn more about managing and achieving your financial goals.">
+    <meta name="keywords" content="entrepreneurship, financial, literacy, youth, app, saving money, money, learning, teaching,">
+    <link type="text/plain" rel="author" href="https://www.flyapp.ca/humans.txt" />
+    <title>FLY</title>
+
+    <!-- FAVICONS -->
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="img/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="img/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="img/apple-touch-icon-144x144.png">
+
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/share-button.min.css">
+
+    <link rel="stylesheet" href='css/style.css'>
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <script src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="js/share-button.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<!-- ---------- dashboard ------------- -->
+<div data-role="page" id="dashboard">
+
+    <div data-role="header" data-theme="b" data-id="header-nav" data-position="fixed" data-tap-toggle="false" class="text-center">
+        <div class="user-info">
+            <img src="img/photo.png" class="user-image" />
+            <h5 class="level">
+                <span id="id_me_xp_level">Lvl </span>
+            </h5>
+        </div>
+        <div class="progress-bar-div">
+            <div class="progress">
+                <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
+                    XP
+                </div>
+            </div>
+        </div>
+        <div class="nav-menu">
+            <a onclick="start_page_tour();">
+                <i class="fa fa-question-circle fa-fw"></i>
+            </a>
+            <a class="menu-button" href="#nav-menu-panel">
+                <i class="fa fa-bars fa-fw"></i>
+            </a>
+            <a class="close-menu-button" href="#nav-menu-panel" data-rel="close" style="display:none;"></a>
+        </div>
+    </div><!-- /header -->
+
+    <div data-role="panel" data-position="right" data-display="overlay" data-theme="a" id="nav-menu-panel" align="center" data-dismissible="false">
+        <img src="img/photo.png" class="user-image" />
+        <h5 class="greeting"></h5>
+        <ul data-role="listview">
+            <li>
+                <a onclick="window.location='/account';"><i class="fa fa-user fa-fw"></i> Profile</a>
+            </li>
+            <li>
+                <a onclick="window.location='/notifications';"><i class="fa fa-cog fa-fw"></i> Notifications</a>
+            </li>
+            <li>
+                <a onclick="ajax_logoff();"><i class="fa fa-power-off fa-fw"></i> Log Out</a>
+            </li>
+            <li data-role="list-divider">
+            </li>
+            <li>
+                <a onclick="window.location='/help';"><i class="fa fa-question-circle fa-fw"></i>Help</a>
+            </li>
+            <li>
+                <a onclick="window.location='/dashboard';"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+            </li>
+            <li data-icon="carat-d">
+                <a onclick="$('#goal-menu').toggle();"><i class="fa fa-bullseye fa-fw"></i> My Goals</a>
+                <ul data-role="listview" id="goal-menu" style="display:none;">
+                    <li><a onclick="window.location='mygoals';">My Goals</a></li>
+                    <li><a onclick="window.location='mygoals/savings';">Saving</a></li>
+                    <li><a onclick="window.location='mygoals/credit';">Credit</a></li>
+                    <li><a onclick="window.location='mygoals/final'">Long Term</a></li>
+                </ul>
+            </li>
+            <li>
+                <a onclick="window.location='/learning';"><i class="fa fa-edit fa-fw"></i>Learning</a>
+            </li>
+            <li>
+                <a onclick="window.location='/resources';"><i class="fa fa-link fa-fw"></i> Resources</a>
+            </li>
+            <li data-icon="delete">
+                <a data-rel="close"><i class="fa fa-ban fa-fw fa-align-left"></i>Close Menu</a>
+            </li>
+        </ul>
+    </div><!-- /panel -->
+
+    <div data-role="content">
+        <div class="text-center">
+
+            <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
+
+            <div class="my-boxes dashboard-box red-box" >
+                <img src="img/oinweb-fly-goals-menu-icon.png" />
+                <h2>My Goals</h2>
+                <p>Set goals for savings and credit score</p>
+                <a onclick="window.location='/mygoals'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">My Goals</a>
+            </div>
+
+            <div class="my-boxes dashboard-box blue-box">
+                <img src="img/oinweb-fly-learning.png" />
+                <h2>Learning</h2>
+                <p>Learn more about financial management</p>
+                <a onclick="window.location='/learning'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
+            </div>
+
+            <div class="my-boxes dashboard-box green-box">
+                <img src="img/oinweb-fly-resources.png" />
+                <h2>Resources</h2>
+                <p>Other helpful apps and sites</p>
+                <a onclick="window.location='/resources'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
+            </div>
+
+        </div>
+    </div><!-- /content -->
+
+    <div data-role="footer" data-theme="b" data-position="fixed" data-id="footer-nav" data-tap-toggle="false">
+        <data class="row">
+            <div>
+                <p><small>Provided by Ontario Immigrant Network <br/> <a href="#" onclick="$('#contacts-popup').popup('open');">Contacts</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#privacy-popup').popup('open');">Privacy Policy</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#supporters-popup').popup('open');">Supporters</a></small></p>
+            </div>
+        </data>
+    </div>
+
+    <div data-role="popup" id="contacts-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div>
+            <h3>Contact Us</h3>
+            <p>Email - <a href="mailto:fly@oinweb.ca">fly@oinweb.ca</a></p>
+            <p>Twitter - <a href="http://twitter.com/oinweb">@oinweb</a></p>
+            <p>Website - <a href="http://oinweb.ca">oinweb.ca</a></p>
+            <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="$('#contacts-popup').popup('close');">Close</button>
+        </div>
+    </div>
+
+    <div data-role="popup" id="privacy-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div style="overflow-y:scroll;">
+            <h3>Privacy Statement</h3>
+            <h5>Introduction</h5>
+            <p>Ontario Immigrant Network maintains this web site to help the public find information about its services. Ontario Immigrant Network is committed to ensuring your privacy while you visit the site.</p>
+            <h5>Links to other sites</h5>
+            <p>The Ontario Immigrant Network web site provides links to other sites that may be of interest. This privacy statement covers the main Ontario Immigrant Network web site and those of Ontario Immigrant Network business units ONLY and not the web sites of other organizations. Each organization’s web site may have a different privacy statement depending on the nature of its site. You should review the privacy statement each time you submit personal information on a web site.</p>
+            <h5>Collection of information</h5>
+            <p>The only information collected that is used to identify you is information you give voluntarily. When you submit a question or comment, you may be asked for your name, e-mail address, or other information. This information is only used to process and respond to your question or comment. This information is not disclosed except to authorized personnel who need it to answer your question. In transit, the information that you send may not be secure. If you would prefer to raise a comment or question in person, please call Ontario Immigrant Network at 519-521-3135.</p>
+            <h5>Security</h5>
+            <p>Ontario Immigrant Network computer system uses software to monitor unauthorized attempts to upload or change information, or damage the service we provide. No attempt is made to identify users or their usage patterns except during investigations.</p>
+
+            <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="$('#privacy-popup').popup('close');">{% trans 'Close' %}</button>
+        </div>
+    </div>
+
+    <div data-role="popup" id="supporters-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3>trans 'Thank you, our supporters</h3>
+            <a href="http://www.libro.ca"><img src="img/libro.png" alt="libro logo" class="supporter-image libro" /></a>
+            <a href="http://www.web-alchemist.com"><img src="img/webalchemists.png" alt="web alchemists logo" class="supporter-image" style="width:47%;float:left;padding:0;"/></a>
+            <a href="http://www.mikasoftware.com"><img src="img/mikasoftware.png" alt="academics today logo" class="supporter-image" style="width:49%;float:right;padding:0;margin-top:15px;" /></a>
+            <a href="http://www.vivacanada.com"><img src="img/vivacanada.jpg" alt="viva canada logo" class="supporter-image" /><br/></a>
+            <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="$('#supporters-popup').popup('close');">Close</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            loadUserData();
+
+            // Add a slight deley before detect any notications and load UI.
+            setTimeout(function(){
+                handle_fly_notifications();
+            }, 500);
+
+            $.mobile.ajaxEnabled = false;
+            $.mobile.allowSamePageTransition = false;
+        });
+
+        /**
+         *  Function will fetch the Me object and update the Top Menu with the
+         *  latest data.
+         */
+        function ajax_refresh_me_top_menu() {
+            get_me(
+                    1,
+                    function(me) {
+                        var level = me['num'];
+                        $('#id_me_xp_level').html("Lvl "+level);
+
+                        var xp_score = me['xp'] + "/" + me['max_xp'];
+                        $('#id_me_xp').html(xp_score);
+
+                        var xp_percent = me['xp_percent'];
+                        $('#id_me_xp').css('width', xp_percent);
+                    },
+                    function(json_error) {
+                        console.log(json_error);
+                    }
+            );
+        }
+
+        /**
+         *  Function will log out the user and return the user to the main authentication page.
+         */
+        function ajax_logoff()
+        {
+            sign_off(
+                    function(ok) {
+                        window.location='/{{ request.language }}/authentication';
+                    },
+                    function(bad) {
+                        console.log(bad);
+                    }
+            );
+        }
+
+        var advance_tour = false;
+        var cur_bubble = 0;
+        var tour_bubbles = [
+            {
+                top: 45,
+                left: 25,
+                posx: 'left',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'Welcome to the Financial Literacy / Entrepreneurship for Youth App!',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 45,
+                left: 25,
+                posx: 'left',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'This top bar shows from left-to-right, your avatar, your current FLY level, the amount of experience you have and how much you need to advance to the next level, a help button which will start the guided tour on any page, and the menu button.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 45,
+                right: 25,
+                posx: 'right',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'Clicking the menu bar will give you a list of all pages you can visit in a pop-out panel',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: true,
+                action: function(){ setTimeout(function(){ $('.menu-button').trigger('click'); }, 1000); }
+            },
+            {
+                top: 215,
+                right: 25,
+                posx: 'right',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'This menu allows you access to every part of the FLY App. Under Profile, you can see your account information, your statistics, current goals, goal history, completed courses, any earned FLY Badges, and can subscribe to the newsletter.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 215,
+                right: 25,
+                posx: 'right',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'Under notifications you can change notification options for instance if a goal has been completed and needs your attention, and can turn these on and off.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 215,
+                right: 25,
+                posx: 'right',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                text: 'Log Out allows you to log out of the application.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'Help will take you to a contact page where you can ask questions if you need help with something.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'Dashboard is the page you are on right now, and gives you quick access to your goals, any available courses, and also any resources that you can browse through',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'My Goals allows you to set Savings, Credit, and Long-Term goals.  You can set goals once a month, and completing them lets you earn xp and badges.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'Learning allows you to see any courses you have available. At the end of every course you\'ll be able to take a quiz to see how well you did.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'Resources is a collection of resources like blogs, company pages, and social media accounts that give out financial advice, or have tips on managing your money.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 15,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.ui-content div.text-center',
+                text: 'Close Menu will close the navigation menu.  The menu will now close and you\'ll be back on the Dashboard.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: true,
+                action: function(){ setTimeout(function(){ $('.close-menu-button').trigger('click'); }, 1000) }
+            },
+            {
+                top: 45,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.red-box',
+                center: true,
+                text: 'This box lets you go to your goals section, where you can set goals by clicking the button at the bottom',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 45,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.blue-box',
+                center: true,
+                text: 'This box lets you go to the learning section, where you can take any available courses, plus a quiz once you are finished reading the course material.  More courses will unlock as you complete them.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 45,
+                right: 25,
+                posx: 'right',
+                type: 'top',
+                element: '.green-box',
+                center: true,
+                text: 'This box lets you go to the resources section, where you can browse through helpful resources on taking care of your finances and money, as well as visit social media accounts devoted to finances, and get access to other applications that can help you with money management.',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Continue</button>',
+                hasaction: false
+            },
+            {
+                top: 45,
+                left: 25,
+                posx: 'left',
+                type: 'bottom',
+                element: '.ui-content div.text-center',
+                center: true,
+                text: 'That concludes the tour of the dashboard page. Remember that you can press the help icon in the top bar at any time to view the tour again, or to view a tour of another page',
+                button: '<br/><button data-role="none" onclick="advance_tour = true;">Finish</button>',
+                finish: true,
+                hasaction: false
+            }
+
+        ];
+
+        function start_page_tour(){
+            $('.tour-bubble').show();
+            next_bubble();
+
+            setInterval(function(){ if(advance_tour == true){ advance_tour = false; next_bubble(); } }, 300);
+        }
+
+        function next_bubble(){
+            if(cur_bubble <= tour_bubbles.length){
+                // get current bubble
+                var bubble = tour_bubbles[cur_bubble];
+                // get the active bubble
+                var active_bubble = $('.tour-bubble');
+
+                if( cur_bubble == tour_bubbles.length ){
+                    active_bubble.hide();
+                    cur_bubble = 0;
+                    return;
+                }
+
+                if( bubble.center )
+                    window.location="#tour-bubble";
+
+                // position the tour bubble dependant on element
+                $(bubble.element).prepend(active_bubble);
+
+                // change bubble type
+                if(bubble.type == 'top'){
+                    active_bubble.removeClass('bubble-bottom').removeClass('bubble-left').removeClass('bubble-right').addClass('bubble-top');
+                }
+                else if(bubble.type =='bottom'){
+                    active_bubble.removeClass('bubble-top').removeClass('bubble-left').removeClass('bubble-right').addClass('bubble-bottom');
+                }
+                else if(bubble.type == 'left'){
+                    active_bubble.removeClass('bubble-bottom').removeClass('bubble-top').removeClass('bubble-right').addClass('bubble-left');
+                }
+                else if(bubble.type == 'right'){
+                    active_bubble.removeClass('bubble-bottom').removeClass('bubble-top').removeClass('bubble-left').addClass('bubble-right');
+                }
+
+                // position bubble with absolute positioning
+                active_bubble.css('top',bubble.top+'px');
+                if( bubble.posx == 'left'){
+                    active_bubble.css('left',bubble.left+'px').css('right', 'auto');
+                }
+                else{
+                    active_bubble.css('right', bubble.right+'px').css('left', 'auto');
+                }
+
+                // change the bubble text and button
+                active_bubble.text(bubble.text);
+
+                // if there is an action to be performed, perform it
+                if(bubble.hasaction){
+                    bubble.action();
+                    setTimeout(function(){ active_bubble.append(bubble.button) }, 1500);
+                }
+                else{
+                    active_bubble.append(bubble.button);
+                }
+
+                active_bubble.show();
+
+                // advance count to next bubble to prepare for advancement
+                cur_bubble++;
+            }
+        }
+    </script>
+
+</div><!-- /page -->
+
+
+
+<script>
+    $(document).ready(function(){
+
+
+    });
+</script>
+
+</body>
+<script type="text/javascript" src="js/storage.js"></script>
+<script type="text/javascript" src="js/retina.js"></script>
+
+</html>
