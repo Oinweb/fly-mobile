@@ -103,25 +103,27 @@
 
             <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
 
-            <div class="my-boxes dashboard-box red-box" >
-                <img src="img/oinweb-fly-goals-menu-icon.png" />
-                <h2>My Goals</h2>
-                <p>Set goals for savings and credit score</p>
-                <a onclick="window.location='/mygoals'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">My Goals</a>
+            <div class="my-boxes red-box resources-box">
+                <img src="img/oinflyapp-social-media-icon.png" />
+                <h2>Social Media</h2>
+                <ul id="red-list" data-role="listview" data-inset="true" class="m0">
+                </ul>
             </div>
 
-            <div class="my-boxes dashboard-box blue-box">
-                <img src="img/oinweb-fly-learning.png" />
-                <h2>Learning</h2>
-                <p>Learn more about financial management</p>
-                <a onclick="window.location='/learning'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
+            <div class="my-boxes blue-box resources-box">
+                <img src="img/oinflyapp-blogs-icon.png" />
+                <h2>Blogs</h2>
+                <ul id="blue-list" data-role="listview" data-inset="true" class="m0">
+
+                </ul>
             </div>
 
-            <div class="my-boxes dashboard-box green-box">
-                <img src="img/oinweb-fly-resources.png" />
-                <h2>Resources</h2>
-                <p>Other helpful apps and sites</p>
-                <a onclick="window.location='/resources'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
+            <div class="my-boxes green-box resources-box">
+                <img src="img/oinflyapp-apps-icon.png" />
+                <h2>Other Cool Apps</h2>
+                <ul id="green-list" data-role="listview" data-inset="true" class="m0">
+
+                </ul>
             </div>
 
         </div>
@@ -174,13 +176,15 @@
         </div>
     </div>
 
-    <script src="js/pages/dashboard.js"></script>
+    <script src="js/pages/resources.js"></script>
+
     <script>
         $(document).ready(function(){
             // Add a slight deley before detect any notications and load UI.
             setTimeout(function(){
                 handle_fly_notifications();
             }, 500);
+            get_resource_links();
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
@@ -222,6 +226,50 @@
                         console.log(bad);
                     }
             );
+        }
+
+        function get_resource_links(){
+            var url = 'http://127.0.0.1:8000/api/resource_links/?format=json';
+            $.ajax({
+                url: url,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(result){
+                    add_resource_links(result);
+                },
+                error: function(xhr, status, error){
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                },
+                complete: function(xhr, status){
+                    // do nothing
+                }
+            })
+        }
+
+        function add_resource_links(data){
+            $.each(data.results, function(ind, value){
+                html = '<li>';
+                html += '<a style="margin:0;width:100%;" href="' + value.url + '">';
+                html += value.title;
+                html += '</a>';
+                html += '</li>';
+
+                switch(value.type){
+                    case 1:
+                        $('#red-list').append(html);
+                        $('#red-list').listview('refresh');
+                        break;
+                    case 2:
+                        $('#blue-list').append(html);
+                        $('#blue-list').listview('refresh');
+                        break;
+                    case 3:
+                        $('#green-list').append(html);
+                        $('#green-list').listview('refresh');
+                }
+            })
         }
     </script>
 </div><!-- /page -->

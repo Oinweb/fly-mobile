@@ -103,26 +103,9 @@
 
             <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
 
-            <div class="my-boxes dashboard-box red-box" >
-                <img src="img/oinweb-fly-goals-menu-icon.png" />
-                <h2>My Goals</h2>
-                <p>Set goals for savings and credit score</p>
-                <a onclick="window.location='/mygoals'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">My Goals</a>
-            </div>
-
-            <div class="my-boxes dashboard-box blue-box">
-                <img src="img/oinweb-fly-learning.png" />
-                <h2>Learning</h2>
-                <p>Learn more about financial management</p>
-                <a onclick="window.location='/learning'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
-
-            <div class="my-boxes dashboard-box green-box">
-                <img src="img/oinweb-fly-resources.png" />
-                <h2>Resources</h2>
-                <p>Other helpful apps and sites</p>
-                <a onclick="window.location='/resources'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
+            <h3 class="ui-bar-a locked-header" style="max-width:800px;padding:10px;margin:20px auto;font-family:Arial;border-radius:5px;">
+                Locked Courses
+            </h3>
 
         </div>
     </div><!-- /content -->
@@ -165,7 +148,7 @@
 
     <div data-role="popup" id="supporters-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
         <div class="text-center">
-            <h3>trans 'Thank you, our supporters</h3>
+            <h3>Thank you, our supporters</h3>
             <a href="http://www.libro.ca"><img src="img/libro.png" alt="libro logo" class="supporter-image libro" /></a>
             <a href="http://www.web-alchemist.com"><img src="img/webalchemists.png" alt="web alchemists logo" class="supporter-image" style="width:47%;float:left;padding:0;"/></a>
             <a href="http://www.mikasoftware.com"><img src="img/mikasoftware.png" alt="academics today logo" class="supporter-image" style="width:49%;float:right;padding:0;margin-top:15px;" /></a>
@@ -174,7 +157,7 @@
         </div>
     </div>
 
-    <script src="js/pages/dashboard.js"></script>
+    <script src="js/pages/learning_master.js"></script>
     <script>
         $(document).ready(function(){
             // Add a slight deley before detect any notications and load UI.
@@ -182,7 +165,10 @@
                 handle_fly_notifications();
             }, 500);
 
+            get_courses();
+
             $.mobile.ajaxEnabled = false;
+            $.mobile.cors
             $.mobile.allowSamePageTransition = false;
         });
 
@@ -222,6 +208,119 @@
                         console.log(bad);
                     }
             );
+        }
+
+        function get_courses(){
+            var url = 'http://127.0.0.1:8000/api/courses/?format=json';
+            $.ajax({
+                url: url,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(result){
+                    build_course_ui(result);
+                },
+                error: function(xhr, status, error){
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                },
+                complete: function(xhr, status){
+                    // do nothing
+                }
+            })
+        }
+
+        // need to get user information as to whether they can access the course or not
+        function get_user_status(){}
+
+
+        function build_course_ui(data){
+            $.each(data.results, function(i, val){
+                if( val.has_prerequisites ){
+                    return;
+                }
+                var html = '<div class="my-boxes ';
+
+                if( val.type == 1 && !val.has_prerequisites){
+                    html += 'red-box ';
+                }
+                else if(val.type == 2 && !val.has_prerequisites ){
+                    html += 'blue-box ';
+                }
+                else if(val.type == 3 && !val.has_prerequisites ){
+                    html += 'green-box ';
+                }
+
+                html += 'learning-box">';
+                html += '<img src="' + val.image + '" class="course-img" />';
+                html += '<h3>' + val.title + '</h3>';
+                html += '<p>' + val.summary + '</p>';
+
+                if( val.duration < 30 ){
+                    html += '<small class="short-course">Duration: 5 minutes</small>';
+                }
+                else if( val.duration < 60 ){
+                    html += '<small class="moderate-course">Duration: 30 minutes</small>';
+                }
+                else if( val.duration >= 60 ){
+                    html += '<small class="long-course">Duration: 1 hour</small>';
+                }
+
+                html += '<button class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" onclick="window.location=\'/{{ request.language }}/course/{{ course.id }}/\';"> Begin Course</button>';
+                html += '</div>';
+
+                $('.tour-bubble').after(html);
+            });
+
+            $.each(data.results, function(i, val){
+               if( !val.has_prerequisites ){
+                   return;
+               }
+
+                var html = '<div class="my-boxes ';
+
+                if( val.type == 1 && !val.has_prerequisites){
+                    html += 'red-box ';
+                }
+                else if(val.type == 2 && !val.has_prerequisites ){
+                    html += 'blue-box ';
+                }
+                else if(val.type == 3 && !val.has_prerequisites ){
+                    html += 'green-box ';
+                }
+
+                html += 'locked learning-box">';
+                html += '<img src="' + val.image + '" class="course-img" />';
+                html += '<h3>' + val.title + '</h3>';
+                html += '<p>' + val.summary + '</p>';
+
+                if( val.duration < 30 ){
+                    html += '<small class="short-course">Duration: 5 minutes</small>';
+                }
+                else if( val.duration < 60 ){
+                    html += '<small class="moderate-course">Duration: 30 minutes</small>';
+                }
+                else if( val.duration >= 60 ){
+                    html += '<small class="long-course">Duration: 1 hour</small>';
+                }
+
+                html += '<button disabled class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" onclick="window.location=\'/{{ request.language }}/course/{{ course.id }}/\';">Locked</button>';
+                html += '</div>';
+
+                $('h3.locked-header').after(html);
+            });
+//                '<small class="short-course">Duration: 5 minutes</small>'
+//
+//                '<small class="moderate-course">Duration: 30 minutes</small>'
+//
+//                '<small class="long-course">Duration: 1 hour</small>'
+//
+//                '<small class="short-course">Duration: Unknown duration!</small>'
+//
+//                '<button class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" onclick="window.location='/{{ request.language }}/course/{{ course.id }}/\';">'
+//                    Begin Course
+//                </button>
+//            </div>
         }
     </script>
 </div><!-- /page -->
