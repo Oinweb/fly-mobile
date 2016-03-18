@@ -98,6 +98,43 @@
         </ul>
     </div><!-- /panel -->
 
+    <input id="notification_id" type="hidden" value=0 />
+    <input id="notification_type" type="hidden" value=0 />
+
+    <div data-role="popup" id="levelup-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3>You've earned a new FLY level!</h3>
+            <p class="text-left">Congratulations! You've just leveled up your financial skills! Let your friends know, and keep up the good work!</p>
+            <fieldset class="level-up-fieldset">
+                <h3 class="level" id="id_levelup_num">
+                    <!-- Level Number Placeholder -->
+                </h3>
+                <h4 class="level-title"  id="id_levelup_title">
+                    <!-- Description Placeholder -->
+                </h4>
+            </fieldset>
+            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
+            <button onclick="ajax_delete_this_notification(); $('#levelup-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
+        </div>
+    </div>
+
+    <div data-role="popup" id="badge-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3 id="id_new_badge_title">
+                <!-- Title Placeholder -->
+            </h3>
+            <p class="text-left" id="id_new_badge_description">
+                <!-- Description Placeholder -->
+            </p>
+            <p><i class="fa fa-3x fa-thumbs-up"></i></p>
+
+            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
+            <button onclick="ajax_delete_this_notification(); $('#badge-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
+        </div>
+    </div>
+    <script src="js/notifications.js"></script>
+
+
     <div data-role="content">
         <div class="text-center">
 
@@ -157,6 +194,7 @@
         </div>
     </div>
 
+    <script src="js/global.js"></script>
     <script src="js/pages/learning_master.js"></script>
     <script>
         $(document).ready(function(){
@@ -165,7 +203,7 @@
                 handle_fly_notifications();
             }, 500);
 
-            get_courses();
+            setTimeout(get_courses, 300);
 
             $.mobile.ajaxEnabled = false;
             $.mobile.cors
@@ -211,7 +249,7 @@
         }
 
         function get_courses(){
-            var url = 'http://127.0.0.1:8000/api/courses/?format=json';
+            var url = 'http://127.0.0.1:8000/api/courses/?format=json&ordering=id';
             $.ajax({
                 url: url,
                 cache: false,
@@ -266,7 +304,8 @@
                     html += '<small class="long-course">Duration: 1 hour</small>';
                 }
 
-                html += '<button class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" onclick="window.location=\'/{{ request.language }}/course/{{ course.id }}/\';"> Begin Course</button>';
+                html += '<button class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" ';
+                html += 'onclick="window.location=\'learning_details.html?id=' + val.id + '\';"> Begin Course</button>';
                 html += '</div>';
 
                 $('.tour-bubble').after(html);
@@ -304,7 +343,8 @@
                     html += '<small class="long-course">Duration: 1 hour</small>';
                 }
 
-                html += '<button disabled class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course" onclick="window.location=\'/{{ request.language }}/course/{{ course.id }}/\';">Locked</button>';
+                html += '<button disabled class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all begin-course";' ;
+                html += 'onclick="window.location=\'/learning_details.html?id=' + val.id + '\';">Locked</button>';
                 html += '</div>';
 
                 $('h3.locked-header').after(html);

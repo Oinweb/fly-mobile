@@ -140,28 +140,33 @@
 
             <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
 
-            <div class="my-boxes red-box resources-box">
-                <img src="img/oinflyapp-social-media-icon.png" />
-                <h2>Social Media</h2>
-                <ul id="red-list" data-role="listview" data-inset="true" class="m0">
-                </ul>
-            </div>
-
-            <div class="my-boxes blue-box resources-box">
-                <img src="img/oinflyapp-blogs-icon.png" />
-                <h2>Blogs</h2>
-                <ul id="blue-list" data-role="listview" data-inset="true" class="m0">
-
-                </ul>
-            </div>
-
-            <div class="my-boxes green-box resources-box">
-                <img src="img/oinflyapp-apps-icon.png" />
-                <h2>Other Cool Apps</h2>
-                <ul id="green-list" data-role="listview" data-inset="true" class="m0">
-
-                </ul>
-            </div>
+            <h4 class="ui-bar-a ui-corner-all" style="padding:5px;">
+                Contact Us
+            </h4>
+            <p>If you have any questions about the usage of the program, or have found a bug, please send us a message and we will do our best to help you as quickly as we can.</p>
+            <form id="contactForm" method="post" action="http://127.0.0.1:8000/en/help/contact">
+                <div class="form-group">
+                    <input type="text" id="name" name="name" placeholder="Name"/>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder="Email Address" />
+                </div>
+                <div class="form-group">
+                    <select id="subject" name="subject" style="color: #000 !important;">
+                        <option value="">Subject</option>
+                        <option value="Comment">Comment<option>
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Bug Report">Bug Report</option>
+                        <option value="Help Request">Help Request</option>
+                        <option value="Other Inquiry">Other Inquiry</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" name="message" placeholder="Message"></textarea>
+                </div>
+                <div id="form-alert" class="alert" data-role="alert" style="display:none;"></div>
+                <button type="submit" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left ui-icon-mail" onclick="ajax_send_message();">Send Message</button>
+            </form>
 
         </div>
     </div><!-- /content -->
@@ -214,15 +219,13 @@
     </div>
 
     <script src="js/global.js"></script>
-    <script src="js/pages/resources.js"></script>
-
+    <script src="js/pages/help.js"></script>
     <script>
         $(document).ready(function(){
             // Add a slight deley before detect any notications and load UI.
             setTimeout(function(){
                 handle_fly_notifications();
             }, 500);
-            get_resource_links();
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
@@ -264,51 +267,7 @@
                         console.log(bad);
                     }
             );
-        }
-
-        function get_resource_links(){
-            var url = 'http://127.0.0.1:8000/api/resource_links/?format=json';
-            $.ajax({
-                url: url,
-                cache: false,
-                contentType: false,
-                processData: false,
-                type: 'GET',
-                success: function(result){
-                    add_resource_links(result);
-                },
-                error: function(xhr, status, error){
-                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-                },
-                complete: function(xhr, status){
-                    // do nothing
-                }
-            })
-        }
-
-        function add_resource_links(data){
-            $.each(data.results, function(ind, value){
-                html = '<li>';
-                html += '<a style="margin:0;width:100%;" href="' + value.url + '">';
-                html += value.title;
-                html += '</a>';
-                html += '</li>';
-
-                switch(value.type){
-                    case 1:
-                        $('#red-list').append(html);
-                        $('#red-list').listview('refresh');
-                        break;
-                    case 2:
-                        $('#blue-list').append(html);
-                        $('#blue-list').listview('refresh');
-                        break;
-                    case 3:
-                        $('#green-list').append(html);
-                        $('#green-list').listview('refresh');
-                }
-            })
-        }
+        };
     </script>
 </div><!-- /page -->
 

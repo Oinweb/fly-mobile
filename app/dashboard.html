@@ -98,6 +98,43 @@
         </ul>
     </div><!-- /panel -->
 
+    <input id="notification_id" type="hidden" value=0 />
+    <input id="notification_type" type="hidden" value=0 />
+
+    <div data-role="popup" id="levelup-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3>You've earned a new FLY level!</h3>
+            <p class="text-left">Congratulations! You've just leveled up your financial skills! Let your friends know, and keep up the good work!</p>
+            <fieldset class="level-up-fieldset">
+                <h3 class="level" id="id_levelup_num">
+                    <!-- Level Number Placeholder -->
+                </h3>
+                <h4 class="level-title"  id="id_levelup_title">
+                    <!-- Description Placeholder -->
+                </h4>
+            </fieldset>
+            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
+            <button onclick="ajax_delete_this_notification(); $('#levelup-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
+        </div>
+    </div>
+
+    <div data-role="popup" id="badge-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3 id="id_new_badge_title">
+                <!-- Title Placeholder -->
+            </h3>
+            <p class="text-left" id="id_new_badge_description">
+                <!-- Description Placeholder -->
+            </p>
+            <p><i class="fa fa-3x fa-thumbs-up"></i></p>
+
+            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
+            <button onclick="ajax_delete_this_notification(); $('#badge-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
+        </div>
+    </div>
+    <script src="js/notifications.js"></script>
+
+
     <div data-role="content">
         <div class="text-center">
 
@@ -174,6 +211,7 @@
         </div>
     </div>
 
+    <script src="js/global.js"></script>
     <script src="js/pages/dashboard.js"></script>
     <script>
         $(document).ready(function(){

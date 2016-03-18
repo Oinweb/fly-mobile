@@ -140,27 +140,18 @@
 
             <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
 
-            <div class="my-boxes red-box resources-box">
-                <img src="img/oinflyapp-social-media-icon.png" />
-                <h2>Social Media</h2>
-                <ul id="red-list" data-role="listview" data-inset="true" class="m0">
-                </ul>
-            </div>
-
-            <div class="my-boxes blue-box resources-box">
-                <img src="img/oinflyapp-blogs-icon.png" />
-                <h2>Blogs</h2>
-                <ul id="blue-list" data-role="listview" data-inset="true" class="m0">
-
-                </ul>
-            </div>
-
-            <div class="my-boxes green-box resources-box">
-                <img src="img/oinflyapp-apps-icon.png" />
-                <h2>Other Cool Apps</h2>
-                <ul id="green-list" data-role="listview" data-inset="true" class="m0">
-
-                </ul>
+            <h2 class="ui-bar ui-bar-a ui-corner-all" id="course-title"></h2>
+            <div class="ui-body ui-body-a ui-corner-all">
+                <p id="course-summary"></p>
+                <div class="videoWrapper">
+                    <iframe id="my-video" src="" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <p id="course-description"></p>
+                <button id="btnTakeQuiz"
+                        data-icon="info"
+                        class="ui-btn ui-icon-edit ui-btn-icon-left ui-btn-b ui-corner-all ui-shadow">
+                    <span>Take Quiz</span>
+                </button>
             </div>
 
         </div>
@@ -214,15 +205,15 @@
     </div>
 
     <script src="js/global.js"></script>
-    <script src="js/pages/resources.js"></script>
-
+    <script src="js/pages/learning_details.js"></script>
     <script>
         $(document).ready(function(){
             // Add a slight deley before detect any notications and load UI.
             setTimeout(function(){
                 handle_fly_notifications();
             }, 500);
-            get_resource_links();
+
+            get_course_details();
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
@@ -266,8 +257,10 @@
             );
         }
 
-        function get_resource_links(){
-            var url = 'http://127.0.0.1:8000/api/resource_links/?format=json';
+        function get_course_details(){
+            var course_id = get_get_var('id');
+
+            var url = 'http://127.0.0.1:8000/api/courses/' + course_id + '/?format=json';
             $.ajax({
                 url: url,
                 cache: false,
@@ -275,7 +268,7 @@
                 processData: false,
                 type: 'GET',
                 success: function(result){
-                    add_resource_links(result);
+                    build_course_ui(result);
                 },
                 error: function(xhr, status, error){
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -286,28 +279,11 @@
             })
         }
 
-        function add_resource_links(data){
-            $.each(data.results, function(ind, value){
-                html = '<li>';
-                html += '<a style="margin:0;width:100%;" href="' + value.url + '">';
-                html += value.title;
-                html += '</a>';
-                html += '</li>';
-
-                switch(value.type){
-                    case 1:
-                        $('#red-list').append(html);
-                        $('#red-list').listview('refresh');
-                        break;
-                    case 2:
-                        $('#blue-list').append(html);
-                        $('#blue-list').listview('refresh');
-                        break;
-                    case 3:
-                        $('#green-list').append(html);
-                        $('#green-list').listview('refresh');
-                }
-            })
+        function build_course_ui(data){
+            $('#course-title').text(data.title);
+            $('#course-summary').text(data.summary);
+            $('#course-description').text(data.description);
+            $('#my-video').attr('src',data.video_url);
         }
     </script>
 </div><!-- /page -->
