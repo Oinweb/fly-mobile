@@ -19,12 +19,14 @@
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/share-button.min.css">
-
     <link rel="stylesheet" href='css/style.css'>
+
     <script src="js/jquery-1.11.3.min.js"></script>
     <script src="js/jquery.mobile-1.4.5.min.js"></script>
     <script src="js/share-button.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/global.js"></script>
 </head>
 <body>
 
@@ -57,14 +59,14 @@
     </div><!-- /header -->
 
     <div data-role="panel" data-position="right" data-display="overlay" data-theme="a" id="nav-menu-panel" align="center" data-dismissible="false">
-        <img src="img/photo.png" class="user-image" />
+        <img src="../img/photo.png" class="user-image" />
         <h5 class="greeting"></h5>
         <ul data-role="listview">
             <li>
-                <a onclick="window.location='/account';"><i class="fa fa-user fa-fw"></i> Profile</a>
+                <a onclick="window.location='account.html';"><i class="fa fa-user fa-fw"></i> Profile</a>
             </li>
             <li>
-                <a onclick="window.location='/notifications';"><i class="fa fa-cog fa-fw"></i> Notifications</a>
+                <a onclick="window.location='notifications.html';"><i class="fa fa-cog fa-fw"></i> Notifications</a>
             </li>
             <li>
                 <a onclick="ajax_logoff();"><i class="fa fa-power-off fa-fw"></i> Log Out</a>
@@ -72,25 +74,25 @@
             <li data-role="list-divider">
             </li>
             <li>
-                <a onclick="window.location='/help';"><i class="fa fa-question-circle fa-fw"></i>Help</a>
+                <a onclick="window.location='help.html';"><i class="fa fa-question-circle fa-fw"></i>Help</a>
             </li>
             <li>
-                <a onclick="window.location='/dashboard';"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                <a onclick="window.location='dashboard.html';"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
             </li>
             <li data-icon="carat-d">
                 <a onclick="$('#goal-menu').toggle();"><i class="fa fa-bullseye fa-fw"></i> My Goals</a>
                 <ul data-role="listview" id="goal-menu" style="display:none;">
-                    <li><a onclick="window.location='mygoals';">My Goals</a></li>
-                    <li><a onclick="window.location='mygoals/savings';">Saving</a></li>
-                    <li><a onclick="window.location='mygoals/credit';">Credit</a></li>
-                    <li><a onclick="window.location='mygoals/final'">Long Term</a></li>
+                    <li><a onclick="window.location='mygoals.html';">My Goals</a></li>
+                    <li><a onclick="window.location='savings.html';">Saving</a></li>
+                    <li><a onclick="window.location='credit.html';">Credit</a></li>
+                    <li><a onclick="window.location='final.html'">Long Term</a></li>
                 </ul>
             </li>
             <li>
-                <a onclick="window.location='/learning';"><i class="fa fa-edit fa-fw"></i>Learning</a>
+                <a onclick="window.location='learning_master.html';"><i class="fa fa-edit fa-fw"></i>Learning</a>
             </li>
             <li>
-                <a onclick="window.location='/resources';"><i class="fa fa-link fa-fw"></i> Resources</a>
+                <a onclick="window.location='resources.html';"><i class="fa fa-link fa-fw"></i> Resources</a>
             </li>
             <li data-icon="delete">
                 <a data-rel="close"><i class="fa fa-ban fa-fw fa-align-left"></i>Close Menu</a>
@@ -165,7 +167,7 @@
                     <textarea id="message" name="message" placeholder="Message"></textarea>
                 </div>
                 <div id="form-alert" class="alert" data-role="alert" style="display:none;"></div>
-                <button type="submit" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left ui-icon-mail" onclick="ajax_send_message();">Send Message</button>
+                <button type="button" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left ui-icon-mail" onclick="ajax_send_message();">Send Message</button>
             </form>
 
         </div>
@@ -218,7 +220,6 @@
         </div>
     </div>
 
-    <script src="js/global.js"></script>
     <script src="js/pages/help.js"></script>
     <script>
         $(document).ready(function(){
@@ -231,43 +232,27 @@
             $.mobile.allowSamePageTransition = false;
         });
 
-        /**
-         *  Function will fetch the Me object and update the Top Menu with the
-         *  latest data.
-         */
-        function ajax_refresh_me_top_menu() {
-            get_me(
-                    1,
-                    function(me) {
-                        var level = me['num'];
-                        $('#id_me_xp_level').html("Lvl "+level);
+        function ajax_send_message(){
+            var data = $('#contactForm').serializeArray();
+            var url = "http://127.0.0.1:8000/en/help/contact";
+            var type = "POST";
+            var auth_headers = {
+                Authorization: 'Token ' + localStorage.getItem('auth_token')
+            }
 
-                        var xp_score = me['xp'] + "/" + me['max_xp'];
-                        $('#id_me_xp').html(xp_score);
-
-                        var xp_percent = me['xp_percent'];
-                        $('#id_me_xp').css('width', xp_percent);
-                    },
-                    function(json_error) {
-                        console.log(json_error);
-                    }
-            );
+            $.ajax({
+                url: url,
+                type: type,
+                data: data,
+                headers: auth_headers,
+                success: function(result){
+                    alert(result);
+                },
+                error: function(xhr,status,error){
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                }
+            })
         }
-
-        /**
-         *  Function will log out the user and return the user to the main authentication page.
-         */
-        function ajax_logoff()
-        {
-            sign_off(
-                    function(ok) {
-                        window.location='/{{ request.language }}/authentication';
-                    },
-                    function(bad) {
-                        console.log(bad);
-                    }
-            );
-        };
     </script>
 </div><!-- /page -->
 
