@@ -5,7 +5,7 @@
 function handle_fly_notifications()
 {
     var criteria = Array();
-    criteria.push({ 'user': {{ request.user.id }} });
+    criteria.push({ 'user': localStorage.getItem('user_id') });
 
     filter_notifications(
         criteria,

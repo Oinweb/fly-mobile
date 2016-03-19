@@ -25,7 +25,8 @@ function ajax_login()
         $('#id_email').val(),
         $('#id_password').val(),
         function(json_result) {
-            console.log(json_result);
+            localStorage.setItem('user_id',json_result.user_id);
+            window.location="dashboard.html";
         },
         function(json_error) {
             // Convert the error json into string.
