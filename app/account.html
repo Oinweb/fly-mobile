@@ -323,7 +323,7 @@
         });
 
         function get_profile(){
-            var url = "http://127.0.0.1:8000/api/me/?user=" + localStorage.getItem('user_id') + "&format=json";
+            var url = "http://192.168.1.6:8000/api/me/?user=" + localStorage.getItem('user_id') + "&format=json";
 
             jQuery.ajax({
                 url: url,
@@ -363,7 +363,7 @@
                 $('#newsletter-switch').slider('refresh');
             }
 
-            var url = "http://127.0.0.1:8000/api/xplevels/" + data.xplevel + "/?format=json";
+            var url = "http://192.168.1.6:8000/api/xplevels/" + data.xplevel + "/?format=json";
 
             // get xp level title and max xp
             jQuery.ajax({
@@ -389,7 +389,7 @@
             });
 
             // get savings goals
-            var url = "http://127.0.0.1:8000/api/savings_goals/?format=json"
+            var url = "http://192.168.1.6:8000/api/savings_goals/?format=json"
             jQuery.ajax({
                 url: url,
                 headers: {
@@ -421,7 +421,7 @@
             });
 
             // get credit goals
-            var url = "http://127.0.0.1:8000/api/credit_goals/?format=json"
+            var url = "http://192.168.1.6:8000/api/credit_goals/?format=json"
             jQuery.ajax({
                 url: url,
                 headers: {
@@ -453,7 +453,7 @@
             });
 
             // get credit goals
-            var url = "http://127.0.0.1:8000/api/final_goals/?format=json"
+            var url = "http://192.168.1.6:8000/api/final_goals/?format=json"
             jQuery.ajax({
                 url: url,
                 headers: {

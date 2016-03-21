@@ -146,7 +146,7 @@
                 Contact Us
             </h4>
             <p>If you have any questions about the usage of the program, or have found a bug, please send us a message and we will do our best to help you as quickly as we can.</p>
-            <form id="contactForm" method="post" action="http://127.0.0.1:8000/en/help/contact">
+            <form id="contactForm" method="post" action="http://192.168.1.6:8000/en/help/contact">
                 <div class="form-group">
                     <input type="text" id="name" name="name" placeholder="Name"/>
                 </div>
@@ -234,7 +234,7 @@
 
         function ajax_send_message(){
             var data = $('#contactForm').serializeArray();
-            var url = "http://127.0.0.1:8000/en/help/contact";
+            var url = "http://192.168.1.6:8000/en/help/contact";
             var type = "POST";
             var auth_headers = {
                 Authorization: 'Token ' + localStorage.getItem('auth_token')
