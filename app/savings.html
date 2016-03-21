@@ -61,7 +61,7 @@
     </div><!-- /header -->
 
     <div data-role="panel" data-position="right" data-display="overlay" data-theme="a" id="nav-menu-panel" align="center" data-dismissible="false">
-        <img src="../img/photo.png" class="user-image" />
+        <img src="img/photo.png" class="user-image" />
         <h5 class="greeting"></h5>
         <ul data-role="listview">
             <li>
@@ -166,7 +166,7 @@
 
             <input type="hidden" id="id_goal_id" value=0 />
             <input type="hidden" id="id_goal_type" value=0 />
-            <input type="hidden" id="savings_goal_is_locked" value="" />
+            <input type="hidden" id="savings_goal_is_locked" value="false" />
 
         </div>
     </div><!-- /content -->
@@ -261,6 +261,221 @@
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
         });
+
+        function lockBox(cur_box) {
+            $('.' + cur_box + '-box * input').attr('disabled', 'true');
+            $('.' + cur_box + '-box * select').attr('disabled', 'true');
+            $('#' + cur_box + '-btn').buttonMarkup({icon: 'lock'});
+            $('#' + cur_box + '-btn').data('icon', 'lock');
+            $('#' + cur_box + '-btn').text('Goal Locked (30 days)');
+        }
+
+        function confirm_save_goal(goal_id)
+        {
+            if ($('#savings_goal_is_locked').val() == 1) {
+                return;
+            }
+
+            // Defensive Code: Ensure that the values have been set.
+            if( $('#save-dollars').val() == "" ){
+                $('#error-popup').popup('open');
+                $('#id_error_title').html('{% trans "Savings" %}');
+                $('#id_error_message').html('{% trans "Please enter saving amount in dollars (red box)" %}');
+                return;
+            }
+            if( $('#save-period').val() == "" ){
+                $('#error-popup').popup('open');
+                $('#id_error_title').html('{% trans "Savings" %}');
+                $('#id_error_message').html('{% trans "Please enter your savings period." %}');
+                return;
+            }
+            if( $('#save-time').val() == "" ){
+                $('#error-popup').popup('open');
+                $('#id_error_title').html('{% trans "Savings" %}');
+                $('#id_error_message').html('{% trans "Please enter your savings time." %}');
+                return;
+            }
+
+            // Load the confirmation popup.
+            $('#confirm-popup').popup('open');
+
+            // Save the goal
+            $('#id_goal_id').val(goal_id);
+            $('#id_goal_type').val(1);
+        }
+
+        function save_goal()
+        {
+            var goal_id = parseInt( $('#id_goal_id').val() );
+            var goal_type = parseInt ( $('#id_goal_type').val() );
+
+            if (goal_type == 1) {
+            console.log("Processing Savings Goal");
+            ajax_set_savings_goal(goal_id);
+        } else {
+            alert('{% trans "Unknown goal selected." %}');
+            console.log("Goal ID: "+goal_id);
+            console.log("Goal Type: "+goal_type);
+        }
+        }
+
+        function ajax_set_savings_goal(goal_id)
+        {
+            // Step 1: Fetch the Goal model object from the API.
+            get_savings_goal(
+                    goal_id,
+                    function(goal) {
+                        // Step 2: Update the goal.
+                        goal["amount"] = $('#save-dollars').val();
+                        goal["times"] = parseInt( $('#save-period').val() );
+                        goal["period"] = parseInt( $('#save-time').val() );
+                        goal["is_locked"] = 'True';
+                        var nowPlus30Days = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)); // Now + 30 days.
+                        goal["unlocks"] = nowPlus30Days.toLocaleString();
+
+                        // Step 3: Save the goal.
+                        set_savings_goal(
+                                goal,
+                                function(goal) {
+                                    // Step 4: Lock the particular box depending on what
+                                    //         the 'type' is set as.
+                                    lockBox('red');
+                                    $('#savings_goal_is_locked').val(1);
+                                },
+                                function(error_json) {
+                                    $('#error-popup').popup('open');
+                                    $('#id_error_title').html('{% trans "Savings" %}');
+                                    $('#id_error_message').html('{% trans "An unknown error occured when saving goal, please see log." %}');
+                                    console.log(error_json);
+                                }
+                        );
+                    },
+                    function(error_json) {
+                        $('#error-popup').popup('open');
+                        $('#id_error_title').html('{% trans "Savings" %}');
+                        $('#id_error_message').html('{% trans "An unknown error occured when fetching goal, please see log." %}');
+                        console.log(error_json);
+                    }
+            );
+        }
+
+        function filter_savings_goals(criteria, success_callback, error_callback)
+        {
+            var url = "http://192.168.1.6:8000/api/savings_goals/?format=json";
+            for (var i = 0; i < criteria.length; i++) {
+                url += "&";
+
+                // Build our search criteria in the URL based on the results.
+                for(var index in criteria[i]) {
+                    url += index + "=" + criteria[i][index];
+                }
+            }
+
+            jQuery.ajax({
+                url: url,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(json_results){
+                    success_callback(json_results);
+                },
+                error: function(xhr,status,error) {
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                    error_callback(xhr.responseText);
+                },
+                complete: function(xhr,status) {
+                    // Do nothing.
+                }
+            });
+        }
+
+        function set_savings_goal(data, success_callback, error_callback)
+        {
+            // Setup depending on whether we are inserting or updating.
+            var type = "POST"; // Insert.
+            var url = "http://192.168.1.6:8000/api/savings_goals/";
+            if (data['id'] > 0) {
+                type = "PUT"; // Update
+                url += data['id'] + "/";
+            }
+
+            jQuery.ajax({
+                url: url,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                data: data,
+                type: type,
+                traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                success: function(json_result){
+                    success_callback(json_result); // Call back the function with the JSON results.
+                },
+                error: function(xhr,status,error) {
+                    // Print the error log to console.
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                    // Convert JSON string into javascript associative array.
+                    var json = jQuery.parseJSON(xhr.responseText);
+                    error_callback(json); // Return JSON
+                },
+                complete: function(xhr,status) {
+                    // Do nothing.
+                }
+            });
+        }
+
+        function get_savings_goal(id, success_callback, error_callback) {
+            var url = "http://192.168.1.6:8000/api/savings_goals/" + id + "/?format=json";
+
+            jQuery.ajax({
+                url: url,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(json_results){
+                    success_callback(json_results);
+                },
+                error: function(xhr,status,error) {
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                    error_callback(xhr.responseText);
+                },
+                complete: function(xhr,status) {
+                    // Do nothing.
+                }
+            });
+        }
+
+        function search_savings_goals(keyword, success_callback, error_callback) {
+            var url = "http://192.168.1.6:8000/api/savings_goals/?format=json&search="+keyword;
+            jQuery.ajax({
+                url: url,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(json_results){
+                    success_callback(json_results);
+                },
+                error: function(xhr,status,error) {
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                    error_callback(xhr.responseText);
+                },
+                complete: function(xhr,status) {
+                    // Do nothing.
+                }
+            });
+        }
     </script>
 </div><!-- /page -->
 

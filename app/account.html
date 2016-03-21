@@ -323,7 +323,7 @@
         });
 
         function get_profile(){
-            var url = "http://192.168.1.6:8000/api/me/?user=" + localStorage.getItem('user_id') + "&format=json";
+            var url = "http://192.168.1.6:8000/api/me/" + localStorage.getItem('user_id') + "/?format=json";
 
             jQuery.ajax({
                 url: url,
@@ -336,7 +336,7 @@
                 type: 'GET',
                 success: function(json_results){
                     console.debug(json_results);
-                    build_profile_ui(json_results.results[0]);
+                    build_profile_ui(json_results);
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -401,7 +401,7 @@
                 type: 'GET',
                 success: function(json_results){
                     var cur_goal = json_results.results[json_results.results.length-1];
-                    if( json_results.results.length <= 1 ){
+                    if( json_results == '' ){
                         $('.goal-hist-savings').text('No Goal Set');
                     }
                     var period = '';

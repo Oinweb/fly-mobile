@@ -42,7 +42,7 @@ function sign_in(username, password, success_callback, error_callback) {
         traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
         success: function(json_result){
             get_user_token(username, password);
-            success_callback(json_result); // Call back the function with the JSON results.
+            setTimeout(function(){ success_callback(json_result) }, 500); // Call back the function with the JSON results.
         },
         error: function(xhr,status,error) {
             // Print the error log to console.
@@ -72,7 +72,8 @@ function get_user_token(username, password){
         data: data,
         type: type,
         success: function(json_result){
-            console.log(json_result);
+            console.debug(json_result);
+            localStorage.removeItem('auth_token');
             localStorage.setItem('auth_token',json_result.token);
             window.location="dashboard.html";
         },
@@ -183,359 +184,10 @@ function is_email_valid(email) {
     return re.test(email);
 }
 
-function filter_savings_goals(criteria, success_callback, error_callback)
-{
-    var url = "http://192.168.1.6:8000/api/savings_goals/?format=json";
-    for (var i = 0; i < criteria.length; i++) {
-        url += "&";
 
-        // Build our search criteria in the URL based on the results.
-        for(var index in criteria[i]) {
-            url += index + "=" + criteria[i][index];
-        }
-    }
 
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
 
-function set_savings_goal(data, success_callback, error_callback)
-{
-    // Setup depending on whether we are inserting or updating.
-    var type = "POST"; // Insert.
-    var url = "http://192.168.1.6:8000/api/savings_goals/";
-    if (data['id'] > 0) {
-        type = "PUT"; // Update
-        url += data['id'] + "/";
-    }
 
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        data: data,
-        type: type,
-        traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-        success: function(json_result){
-            success_callback(json_result); // Call back the function with the JSON results.
-        },
-        error: function(xhr,status,error) {
-            // Print the error log to console.
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-
-            // Convert JSON string into javascript associative array.
-            var json = jQuery.parseJSON(xhr.responseText);
-            error_callback(json); // Return JSON
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function get_savings_goal(id, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/savings_goals/" + id + "/?format=json";
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function search_savings_goals(keyword, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/savings_goals/?format=json&search="+keyword;
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function filter_credit_goals(criteria, success_callback, error_callback)
-{
-    var url = "http://192.168.1.6:8000/api/credit_goals/?format=json";
-    for (var i = 0; i < criteria.length; i++) {
-        url += "&";
-
-        // Build our search criteria in the URL based on the results.
-        for(var index in criteria[i]) {
-            url += index + "=" + criteria[i][index];
-        }
-    }
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function set_credit_goal(data, success_callback, error_callback)
-{
-    // Setup depending on whether we are inserting or updating.
-    var type = "POST"; // Insert.
-    var url = "http://192.168.1.6:8000/api/credit_goals/";
-    if (data['id'] > 0) {
-        type = "PUT"; // Update
-        url += data['id'] + "/";
-    }
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        data: data,
-        type: type,
-        traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-        success: function(json_result){
-            success_callback(json_result); // Call back the function with the JSON results.
-        },
-        error: function(xhr,status,error) {
-            // Print the error log to console.
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-
-            // Convert JSON string into javascript associative array.
-            var json = jQuery.parseJSON(xhr.responseText);
-            error_callback(json); // Return JSON
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function get_credit_goal(id, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/credit_goals/" + id + "/?format=json";
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function search_credit_goals(keyword, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/credit_goals/?format=json&search="+keyword;
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function filter_final_goals(criteria, success_callback, error_callback)
-{
-    var url = "http://192.168.1.6:8000/api/final_goals/?format=json";
-    for (var i = 0; i < criteria.length; i++) {
-        url += "&";
-
-        // Build our search criteria in the URL based on the results.
-        for(var index in criteria[i]) {
-            url += index + "=" + criteria[i][index];
-        }
-    }
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function set_final_goal(data, success_callback, error_callback)
-{
-    // Setup depending on whether we are inserting or updating.
-    var type = "POST"; // Insert.
-    var url = "http://192.168.1.6:8000/api/final_goals/";
-    if (data['id'] > 0) {
-        type = "PUT"; // Update
-        url += data['id'] + "/";
-    }
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        data: data,
-        type: type,
-        traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-        success: function(json_result){
-            success_callback(json_result); // Call back the function with the JSON results.
-        },
-        error: function(xhr,status,error) {
-            // Print the error log to console.
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-
-            // Convert JSON string into javascript associative array.
-            var json = jQuery.parseJSON(xhr.responseText);
-            error_callback(json); // Return JSON
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function get_final_goal(id, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/final_goals/" + id + "/?format=json";
-
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
-
-function search_final_goals(keyword, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/final_goals/?format=json&search="+keyword;
-    jQuery.ajax({
-        url: url,
-        headers: {
-            Authorization: 'Token ' + localStorage.getItem('auth_token')
-        },
-        cache: false,
-        contentType: false,
-        processData: false,
-        type: 'GET',
-        success: function(json_results){
-            success_callback(json_results);
-        },
-        error: function(xhr,status,error) {
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-            error_callback(xhr.responseText);
-        },
-        complete: function(xhr,status) {
-            // Do nothing.
-        }
-    });
-}
 
 function set_me(data, success_callback, error_callback)
 {
@@ -573,7 +225,7 @@ function set_me(data, success_callback, error_callback)
 }
 
 function get_me(id, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/me/?user=" + id + "&format=json";
+    var url = "http://192.168.1.6:8000/api/me/" + id + "&format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -644,39 +296,39 @@ function evaluate_me(id, success_callback, error_callback) {
     });
 }
 
-// function filter_notifications(criteria, success_callback, error_callback)
-// {
-//     var url = "http://192.168.1.6:8000/api/notifications/?format=json";
-//     for (var i = 0; i < criteria.length; i++) {
-//         url += "&";
-//
-//         // Build our search criteria in the URL based on the results.
-//         for(var index in criteria[i]) {
-//             url += index + "=" + criteria[i][index];
-//         }
-//     }
-//
-//     jQuery.ajax({
-//         url: url,
-//         headers: {
-//             Authorization: 'Token ' + localStorage.getItem('auth_token')
-//         },
-//         cache: false,
-//         contentType: false,
-//         processData: false,
-//         type: 'GET',
-//         success: function(json_results){
-//             success_callback(json_results);
-//         },
-//         error: function(xhr,status,error) {
-//             console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-//             error_callback(xhr.responseText);
-//         },
-//         complete: function(xhr,status) {
-//             // Do nothing.
-//         }
-//     });
-// }
+function filter_notifications(criteria, success_callback, error_callback)
+{
+    var url = "http://192.168.1.6:8000/api/notifications/?format=json";
+    for (var i = 0; i < criteria.length; i++) {
+        url += "&";
+
+        // Build our search criteria in the URL based on the results.
+        for(var index in criteria[i]) {
+            url += index + "=" + criteria[i][index];
+        }
+    }
+
+    jQuery.ajax({
+        url: url,
+        headers: {
+            Authorization: 'Token ' + localStorage.getItem('auth_token')
+        },
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET',
+        success: function(json_results){
+            success_callback(json_results);
+        },
+        error: function(xhr,status,error) {
+            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+            error_callback(xhr.responseText);
+        },
+        complete: function(xhr,status) {
+            // Do nothing.
+        }
+    });
+}
 
 function set_notification(data, success_callback, error_callback)
 {

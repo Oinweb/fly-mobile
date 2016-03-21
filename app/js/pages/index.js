@@ -25,6 +25,7 @@ function ajax_login()
         $('#id_email').val(),
         $('#id_password').val(),
         function(json_result) {
+            localStorage.removeItem('user_id');
             localStorage.setItem('user_id',json_result.user_id);
             window.location="dashboard.html";
         },
