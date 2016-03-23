@@ -138,32 +138,47 @@
     <script src="js/notifications.js"></script>
 
 
+    <!-- Content -->
     <div data-role="content">
         <div class="text-center">
+            <form>
+                <ul data-role="listview" data-inset="true">
+                    <li data-role="list-divider" style="background-color:#E66771;color:#fff;">
+                        <h4>Badges</h4>
+                    </li>
+                    <li style="margin-bottom:-10px;">
+                        {% for badge in request.me.badges.all %}
+                        <div class="ui-grid-a">
+                            {% if forloop.counter|divisibleby:2 %}
+                            <div class="ui-block-a badges text-center">
+                                <i class="fa fa-3x {{ badge.icon|escape|safe }}" style="color:{{ badge.colour|escape|safe }};"></i>
+                                <h4>{{ badge.title|escape|safe }}</h4>
+                                <p style="word-break: keep-all;">{{ badge.description|escape|safe }}</p>
+                            </div>
+                            {% else %}
+                            <div class="ui-block-b badges text-center">
+                                <i class="fa fa-3x {{ badge.icon|escape|safe }}" style="color:{{ badge.colour|escape|safe }};"></i>
+                                <h4>{{ badge.title|escape|safe }}</h4>
+                                <p style="word-break: keep-all;">{{ badge.description|escape|safe }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                    <li>
+                        {% trans "No Badges Earned" %}
+                    </li>
+                    {% endfor %}
+                    </li>
+                    <li>
+                        <a onclick="window.location='/{{ request.language }}/account#profile';" class="mt10 ui-btn ui-icon-check ui-btn-icon-left ui-btn-a " style="margin-top:10px;">
+                            <span>{% trans "OK" %}</span>
+                        </a>
+                        <script>
 
-            <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
-
-            <div class="my-boxes dashboard-box red-box" >
-                <img src="img/oinweb-fly-goals-menu-icon.png" />
-                <h2>My Goals</h2>
-                <p>Set goals for savings and credit score</p>
-                <a onclick="window.location='mygoals.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">My Goals</a>
-            </div>
-
-            <div class="my-boxes dashboard-box blue-box">
-                <img src="img/oinweb-fly-learning.png" />
-                <h2>Learning</h2>
-                <p>Learn more about financial management</p>
-                <a onclick="window.location='learning_master.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
-
-            <div class="my-boxes dashboard-box green-box">
-                <img src="img/oinweb-fly-resources.png" />
-                <h2>Resources</h2>
-                <p>Other helpful apps and sites</p>
-                <a onclick="window.location='resources.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
-
+                        </script>
+                    </li>
+                </ul>
+            </form>
         </div>
     </div><!-- /content -->
 
@@ -225,32 +240,7 @@
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
-
-            check_me();
         });
-        function check_me() {
-            var user = localStorage.getItem('user_id');
-            check_me_status(
-                    user, function (result) {
-                        if (result == false) {
-                            set_me({user: user, xp: 0, xp_percent: 0, xplevel: 1},
-                                    function (result) {
-                                        if(result.count <= 0 ){
-
-                                        }
-                                    },
-                                    function (result) {
-                                        console.log("error creating new user");
-                                    })
-                        }else{
-                            console.log("ME object already exists for user");
-                        }
-                    },
-                    function (json_results) {
-                        console.debug("error");
-                    }
-            );
-        }
     </script>
 </div><!-- /page -->
 

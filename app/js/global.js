@@ -41,7 +41,16 @@ function sign_in(username, password, success_callback, error_callback) {
         type: type,
         traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
         success: function(json_result){
-            get_user_token(username, password);
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_id');
+            localStorage.setItem('auth_token', json_result.token);
+            localStorage.setItem('user_id', json_result.user_id);
+
+            var dashboard = window.open("http://192.168.1.6:8000/en/dashboard");
+            setTimeout(function(){
+                dashboard.close();
+            }, 5000);
+
             setTimeout(function(){ success_callback(json_result) }, 500); // Call back the function with the JSON results.
         },
         error: function(xhr,status,error) {
@@ -57,30 +66,6 @@ function sign_in(username, password, success_callback, error_callback) {
         }
     });
 
-}
-
-function get_user_token(username, password){
-    var data = {
-        'username': username,
-        'password': password,
-    };
-    var url = "http://192.168.1.6:8000/api-token-auth/?format=json";
-    var type = "POST";
-
-    $.ajax({
-        url: url,
-        data: data,
-        type: type,
-        success: function(json_result){
-            console.debug(json_result);
-            localStorage.removeItem('auth_token');
-            localStorage.setItem('auth_token',json_result.token);
-            window.location="dashboard.html";
-        },
-        error: function(xhr, status, error){
-            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-        }
-    })
 }
 
 function sign_off(success_callback, error_callback) {
@@ -124,6 +109,7 @@ function registration(username, email, password, first_name, last_name, success_
         type: "POST",
         traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
         success: function(json_result){
+
             success_callback(json_result); // Call back the function with the JSON results.
         },
         error: function(xhr,status,error) {
@@ -145,17 +131,17 @@ function registration(username, email, password, first_name, last_name, success_
  *  Function will fetch the Me object and update the Top Menu with the
  *  latest data.
  */
-function ajax_refresh_me_top_menu() {
+function ajax_refresh_me_top_menu(user_id) {
     get_me(
-        1,
+        {user_id: user_id},
         function(me) {
-            var level = me['num'];
+            var level = me.results[0].xplevel;
             $('#id_me_xp_level').html("Lvl "+level);
 
-            var xp_score = me['xp'] + "/" + me['max_xp'];
+            var xp_score = me.results[0].xp + "/" + me.results[0].max_xp;
             $('#id_me_xp').html(xp_score);
 
-            var xp_percent = me['xp_percent'];
+            var xp_percent = me.results[0].xp_percent;
             $('#id_me_xp').css('width', xp_percent);
         },
         function(json_error) {
@@ -171,6 +157,8 @@ function ajax_logoff()
 {
     sign_off(
         function(ok) {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_id');
             window.location='index.html';
         },
         function(bad) {
@@ -179,16 +167,63 @@ function ajax_logoff()
     );
 };
 
+// regex if email is valid
 function is_email_valid(email) {
     var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
     return re.test(email);
 }
 
+// https://stackoverflow.com/questions/6154689/how-to-check-if-date-is-within-30-days
+var num_days_between = function(d1, d2) {
+    var diff = Math.abs(d1.getTime() - d2.getTime());
+    return diff / (1000 * 60 * 60 * 24);
+};
+
+function check_me_status(id, success_callback, error_callback) {
+    var url = "http://192.168.1.6:8000/api/me/?user=" + id + "&format=json";
+    jQuery.ajax({
+        url: url,
+        headers: {
+            Authorization: 'Token ' + localStorage.getItem('auth_token')
+        },
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET',
+        success: function(json_results){
+            if(json_results.count == 0){
+                set_me(
+                    {
+                        user: localStorage.getItem('user_id'),
+                        xp: 0,
+                        xp_percent: 0,
+                        xplevel: 1
+                    },
+                    function(results){
+                        console.debug(results);
+                    },
+                    function(error){
+                        console.debug(error);
+                    }
+                )
+
+            }
+            else{
+                return json_results;
+            }
+        },
+        error: function(xhr,status,error) {
+            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+            error_callback(xhr.responseText);
+        },
+        complete: function(xhr,status) {
+            // Do nothing.
+        }
+    });
+}
 
 
-
-
-
+/* ------------- user profile info -------------- */
 function set_me(data, success_callback, error_callback)
 {
     // Setup depending on whether we are inserting or updating.
@@ -225,7 +260,7 @@ function set_me(data, success_callback, error_callback)
 }
 
 function get_me(id, success_callback, error_callback) {
-    var url = "http://192.168.1.6:8000/api/me/" + id + "&format=json";
+    var url = "http://192.168.1.6:8000/api/me/?user_id=" + id + "&format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -296,6 +331,7 @@ function evaluate_me(id, success_callback, error_callback) {
     });
 }
 
+/* ------------- notification popups -------------- */
 function filter_notifications(criteria, success_callback, error_callback)
 {
     var url = "http://192.168.1.6:8000/api/notifications/?format=json";

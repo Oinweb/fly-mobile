@@ -27,12 +27,12 @@
     <script src="js/bootstrap.min.js"></script>
 
     <script src="js/global.js"></script>
+    <script src="js/pages/savings.js"></script>
 
 </head>
 <body>
 
-<!-- ---------- dashboard ------------- -->
-<div data-role="page" id="dashboard">
+<div data-role="page" style="background-color:#fff;" id="goal-page-savings-final">
 
     <div data-role="header" data-theme="b" data-id="header-nav" data-position="fixed" data-tap-toggle="false" class="text-center">
         <div class="user-info">
@@ -136,45 +136,53 @@
         </div>
     </div>
     <script src="js/notifications.js"></script>
-
-
+    
     <div data-role="content">
         <div class="text-center">
-
-            <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
-
-            <div class="my-boxes dashboard-box red-box" >
-                <img src="img/oinweb-fly-goals-menu-icon.png" />
-                <h2>My Goals</h2>
-                <p>Set goals for savings and credit score</p>
-                <a onclick="window.location='mygoals.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">My Goals</a>
+            <!-- Savings -->
+            <div class="my-boxes red-box goals-box">
+                <img src="{% static 'img/savings.png' %}" class="goals-img" />
+                <h2>Savings</h2>
+                <p id="goal-text"></p>
+                <p>Did you complete your goal?</p>
+                <select id="goal-switch" data-role="slider" data-mini="true">
+                    <option selected="true" value="False">No</option>
+                    <option value="True">Yes</option>
+                </select>
+                <button data-icon="check" onclick="ajax_finish_savings_goal(cur_goal_id);">OK</button>
             </div>
-
-            <div class="my-boxes dashboard-box blue-box">
-                <img src="img/oinweb-fly-learning.png" />
-                <h2>Learning</h2>
-                <p>Learn more about financial management</p>
-                <a onclick="window.location='learning_master.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
-
-            <div class="my-boxes dashboard-box green-box">
-                <img src="img/oinweb-fly-resources.png" />
-                <h2>Resources</h2>
-                <p>Other helpful apps and sites</p>
-                <a onclick="window.location='resources.html'" class="ui-btn ui-btn-a ui-icon-arrow-r ui-btn-icon-left ui-shadow-icon ui-corner-all">Continue</a>
-            </div>
+            <!-- end Savings -->
 
         </div>
+
     </div><!-- /content -->
 
     <div data-role="footer" data-theme="b" data-position="fixed" data-id="footer-nav" data-tap-toggle="false">
-        <data class="row">
+        <data class="row text-center">
             <div>
                 <p><small>Provided by Ontario Immigrant Network <br/> <a href="#" onclick="$('#contacts-popup').popup('open');">Contacts</a>
                     &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#privacy-popup').popup('open');">Privacy Policy</a>
                     &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#supporters-popup').popup('open');">Supporters</a></small></p>
             </div>
         </data>
+    </div>
+    
+    <div data-role="popup" id="goal-success-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h2>Congratulations!</h2>
+            <h4>You completed your goal, this is awesome! 
+
+            </h4>
+            <br/><br/>
+            <h4>You've Earned 25 xp</h4>
+            <p onclick="$('#badge-popup').popup('open')" style="margin-left:auto;margin-right:auto;border:2px solid #ddd;border-radius:50%;width:70px;padding:10px;">
+                <i class="fa fa-3x fa-thumbs-up" style="color:green;"></i></p>
+
+            <div class="social-sharing">
+                <share-button></share-button>
+            </div>
+            <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="load_goal();">OK</button>
+        </div>
     </div>
 
     <div data-role="popup" id="contacts-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
@@ -214,46 +222,95 @@
         </div>
     </div>
 
-    <script src="js/global.js"></script>
-    <script src="js/pages/dashboard.js"></script>
-    <script>
-        $(document).ready(function(){
-            // Add a slight deley before detect any notications and load UI.
-            setTimeout(function(){
-                handle_fly_notifications();
-            }, 500);
+    <!-- Error Modal -->
+    <div data-role="popup" id="error-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3><i class="fa fa-2x fa-times"></i><div id="id_error_title"></div></h3>
+            <p id="error-text"><div id="id_error_message"></div></p>
+            <button data-role="button"
+                    class="ui-btn ui-corner-all ui-shadow ui-btn-b"
+                    onclick="$('#error-popup').popup('close');">
+                Close
+            </button>
+        </div>
+    </div>
+    <!-- end Message Modal -->
 
-            $.mobile.ajaxEnabled = false;
-            $.mobile.allowSamePageTransition = false;
-
-            check_me();
-        });
-        function check_me() {
-            var user = localStorage.getItem('user_id');
-            check_me_status(
-                    user, function (result) {
-                        if (result == false) {
-                            set_me({user: user, xp: 0, xp_percent: 0, xplevel: 1},
-                                    function (result) {
-                                        if(result.count <= 0 ){
-
-                                        }
-                                    },
-                                    function (result) {
-                                        console.log("error creating new user");
-                                    })
-                        }else{
-                            console.log("ME object already exists for user");
-                        }
-                    },
-                    function (json_results) {
-                        console.debug("error");
-                    }
-            );
-        }
-    </script>
 </div><!-- /page -->
 
+<script>
+    $(document).ready(function(){
+        get_goal_by_user();
+    });
+
+    var cur_goal_id = -1;
+
+    // get the goal by goal user_id
+    function get_goal_by_user(){
+        var user = localStorage.getItem('user_id');
+        var url = "http://192.168.1.6:8000/api/savings_goals/?user=" + user + "&format=json";
+
+        jQuery.ajax({
+            url: url,
+            headers: {
+                Authorization: 'Token ' + localStorage.getItem('auth_token')
+            },
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'GET',
+            success: function(json_results){
+                console.debug(json_results);
+                var cur_goal = json_results.results[json_results.results.length-1];
+                cur_goal_id = cur_goal.id;
+                var period = cur_goal.period;
+                if( period == 1 ){
+                    period = 'weeks';
+                }
+                else if(period == 2){
+                    period = 'months';
+                }
+                $('#goal-text').text("I want to save " + cur_goal.amount + " every " + cur_goal.times + period);
+            },
+            error: function(xhr,status,error) {
+                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+            },
+            complete: function(xhr,status) {
+                // Do nothing.
+            }
+        });
+    }
+
+    function set_goal_accomplished(){
+        var url = "http://192.168.1.6:8000/api/savings_goals/" + cur_goal_id + "/?format=json";
+        var type = "POST"; // Insert.
+        var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:$('#goal-switch').val(),earned_xp:25};
+
+        jQuery.ajax({
+            url: url,
+            headers: {
+                Authorization: 'Token ' + localStorage.getItem('auth_token')
+            },
+            data: data,
+            type: type,
+            traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+            success: function(json_result){
+                console.log(json_result);
+            },
+            error: function(xhr,status,error) {
+                // Print the error log to console.
+                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                // Convert JSON string into javascript associative array.
+                var json = jQuery.parseJSON(xhr.responseText);
+                error_callback(json); // Return JSON
+            },
+            complete: function(xhr,status) {
+                // Do nothing.
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

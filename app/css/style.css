@@ -165,6 +165,8 @@
 }
 .ui-header .user-info{
     float: left;
+    width:90px;
+    min-width: 90px;
 }
 .ui-header .user-info h5.level{
     display:inline-block;
@@ -195,12 +197,11 @@
     text-align: center;
     display: inline-block;
     min-width: 150px;
-    width:45%;
+    width:55%;
     margin: 12px auto 5px;
 }
-.ui-header .user-info{
-    width:80px;
-    display:inline-block;
+.ui-header .progress-bar-div .progress #id_me_xp{
+    font-size:7pt;
 }
 .ui-header .nav-menu a{
     text-decoration:none;

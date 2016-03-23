@@ -60,50 +60,6 @@ function ajax_update_me_with_wants_notification(wants_newsletter, callback) {
 ); // end Get Me.
 }
 
-$(document).ready(function(){
-    loadUserData();
-
-    // Add a slight deley before detect any notications and load UI.
-    setTimeout(function(){
-        handle_fly_notifications();
-    }, 500);
-
-    new ShareButton({
-        networks: {
-            pinterest: { enabled: false },
-            reddit: { enabled: false },
-            linkedin: { enabled: false },
-            whatsapp: { enabled: false }
-        }
-    });
-
-    $('#newsletter-switch').on('change', function(){
-        $('#btnSaveChanges').show();
-    });
-
-    $('#btnSaveChanges').on('click', function(){
-
-        // Get the value of the "Wants Newsletter" and update "Me" object.
-        var wants_newsletter = $('#newsletter-switch').val();
-        if (wants_newsletter == "On") {
-            wants_newsletter = "True";
-        } else {
-            wants_newsletter = "False";
-        }
-
-        // Update "Me" objects.
-        ajax_update_me_with_wants_notification(wants_newsletter, function(message) {
-            console.log(message);
-        });
-
-        // Hide the button message.
-        $(this).hide();
-    });
-    $('#btnDeleteAccount').on('click', function(){
-        $('#confirm-popup').popup('open');
-    });
-});
-
 var advance_tour = false;
 var cur_bubble = 0;
 var tour_bubbles = [

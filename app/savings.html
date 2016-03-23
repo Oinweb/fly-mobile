@@ -189,7 +189,7 @@
             <button data-role="button"
                     class="ui-btn ui-corner-all ui-shadow ui-btn-b"
                     onclick="$('#error-popup').popup('close');">
-                {% trans "Close" %}
+                Close
             </button>
         </div>
     </div>
@@ -198,17 +198,17 @@
     <!-- Success Modal -->
     <div data-role="popup" id="confirm-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
         <div class="text-center">
-            <h3>{% trans "Great you've set a goal!" %}</h3>
-            <p>{% trans "Once you confirm this goal you cannot change it for at least 30 days" %}</p>
+            <h3>Great you've set a goal!</h3>
+            <p>Once you confirm this goal you cannot change it for at least 30 days</p>
             <button data-role="button"
                     class="ui-btn ui-corner-all ui-shadow ui-btn-b"
                     onclick="save_goal(); $('#confirm-popup').popup('close');">
-                {% trans "Lock Goal" %}
+                Lock Goal
             </button>
             <button data-role="button"
                     class="ui-btn ui-corner-all ui-shadow ui-btn-b"
                     onclick="$('#confirm-popup').popup('close');">
-                {% trans "Cancel" %}
+                Cancel
             </button>
         </div>
     </div>
@@ -260,7 +260,11 @@
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
+
+            get_user_goals(localStorage.getItem('user_id'));
         });
+
+        var cur_goal_id = -1;
 
         function lockBox(cur_box) {
             $('.' + cur_box + '-box * input').attr('disabled', 'true');
@@ -279,20 +283,20 @@
             // Defensive Code: Ensure that the values have been set.
             if( $('#save-dollars').val() == "" ){
                 $('#error-popup').popup('open');
-                $('#id_error_title').html('{% trans "Savings" %}');
-                $('#id_error_message').html('{% trans "Please enter saving amount in dollars (red box)" %}');
+                $('#id_error_title').html('Savings');
+                $('#id_error_message').html('Please enter saving amount in dollars (red box)');
                 return;
             }
             if( $('#save-period').val() == "" ){
                 $('#error-popup').popup('open');
-                $('#id_error_title').html('{% trans "Savings" %}');
-                $('#id_error_message').html('{% trans "Please enter your savings period." %}');
+                $('#id_error_title').html('Savings');
+                $('#id_error_message').html('Please enter your savings period.');
                 return;
             }
             if( $('#save-time').val() == "" ){
                 $('#error-popup').popup('open');
-                $('#id_error_title').html('{% trans "Savings" %}');
-                $('#id_error_message').html('{% trans "Please enter your savings time." %}');
+                $('#id_error_title').html('Savings');
+                $('#id_error_message').html('Please enter your savings time.');
                 return;
             }
 
@@ -304,16 +308,17 @@
             $('#id_goal_type').val(1);
         }
 
+
+
         function save_goal()
         {
-            var goal_id = parseInt( $('#id_goal_id').val() );
-            var goal_type = parseInt ( $('#id_goal_type').val() );
+            var goal_type = $('#id_goal_type').val();
 
             if (goal_type == 1) {
             console.log("Processing Savings Goal");
-            ajax_set_savings_goal(goal_id);
+            ajax_set_savings_goal(cur_goal_id);
         } else {
-            alert('{% trans "Unknown goal selected." %}');
+            alert('Unknown goal selected.');
             console.log("Goal ID: "+goal_id);
             console.log("Goal Type: "+goal_type);
         }
@@ -331,7 +336,12 @@
                         goal["period"] = parseInt( $('#save-time').val() );
                         goal["is_locked"] = 'True';
                         var nowPlus30Days = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)); // Now + 30 days.
-                        goal["unlocks"] = nowPlus30Days.toLocaleString();
+                        goal["unlocks"] = nowPlus30Days.getFullYear() + '-' +
+                                nowPlus30Days.getMonth() +
+                                '-' +  nowPlus30Days.getDate() +
+                                'T' + nowPlus30Days.getHours() +
+                                ':' + nowPlus30Days.getMinutes() +
+                                ':' + nowPlus30Days.getSeconds() + "Z";
 
                         // Step 3: Save the goal.
                         set_savings_goal(
@@ -344,16 +354,16 @@
                                 },
                                 function(error_json) {
                                     $('#error-popup').popup('open');
-                                    $('#id_error_title').html('{% trans "Savings" %}');
-                                    $('#id_error_message').html('{% trans "An unknown error occured when saving goal, please see log." %}');
+                                    $('#id_error_title').html('Savings');
+                                    $('#id_error_message').html('An unknown error occured when saving goal, please see log.');
                                     console.log(error_json);
                                 }
                         );
                     },
                     function(error_json) {
                         $('#error-popup').popup('open');
-                        $('#id_error_title').html('{% trans "Savings" %}');
-                        $('#id_error_message').html('{% trans "An unknown error occured when fetching goal, please see log." %}');
+                        $('#id_error_title').html('Savings');
+                        $('#id_error_message').html('An unknown error occured when fetching goal, please see log.');
                         console.log(error_json);
                     }
             );
@@ -451,6 +461,175 @@
                     // Do nothing.
                 }
             });
+        }
+
+        function get_user_goals(user_id){
+            var url = "http://192.168.1.6:8000/api/savings_goals/?user=" + user_id + "&format=json";
+
+            // do a get request for the user's savings goals
+            jQuery.ajax({
+                url: url,
+                type:'GET',
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                success: function(get_result){
+                    console.debug(get_result);
+                    // if there are no results returned
+                    if( get_result.count == 0 ){
+                        console.debug('No previous user goal, creating one now.');
+                        cur_goal_id = -1;
+                        $('#savings_goal_is_locked').val('false');
+                        // Setup depending on whether we are inserting or updating.
+
+                        // post request to create a new empty goal
+                        var type = "POST"; // Insert.
+                        var url = "http://192.168.1.6:8000/api/savings_goals/";
+                        var created_date = new Date().toJSON();
+                        var data = {user:localStorage.getItem('user_id'), created:created_date};
+
+                        jQuery.ajax({
+                            url: url,
+                            headers: {
+                                Authorization: 'Token ' + localStorage.getItem('auth_token')
+                            },
+                            data: data,
+                            type: type,
+                            traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                            success: function(json_result){
+                                console.log(json_result);
+                                cur_goal_id = json_result.results[0].id; // set goal id value
+                            },
+                            error: function(xhr,status,error) {
+                                // Print the error log to console.
+                                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                                // Convert JSON string into javascript associative array.
+                                var json = jQuery.parseJSON(xhr.responseText);
+                            },
+                            complete: function(xhr,status) {
+                                // Do nothing.
+                            }
+                        });
+                    }
+                    // if one or more goals are returned
+                    else{
+                        // get the last goal in the list
+                        var cur_goal = get_result.results[get_result.results.length-1];
+
+                        if( cur_goal.amount == 0 || cur_goal.times == 0){
+                            cur_goal_id = cur_goal.id;
+                            return;
+                        }
+
+                        // check how many days have passed since the goal was locked
+                        var goal_date = new Date(cur_goal.unlocks);
+                        console.debug(goal_date);
+                        var today = new Date();
+                        today = new Date(today.setDate(today.getDate()-30));
+                        var days_passed = num_days_between(goal_date, today);
+                        cur_goal_id = cur_goal.id;
+                        console.debug(cur_goal);
+                        $('#savings_goal_is_locked').val('false');
+
+                        // if the current goal is locked
+                        if(cur_goal.is_locked){
+                            // setup ui for locked appearance
+                            $('#save-dollars').attr('disabled','true').val(cur_goal.amount);
+                            $('#save-period').attr('disabled','true').val(cur_goal.times);
+                            $('#save-time').attr('disabled','true').val(cur_goal.period).select('refresh');
+                            $('#red-btn').buttonMarkup({icon: 'lock'});
+                            $('#red-btn').data('icon','lock');
+                            $('#red-btn').text('Goal Locked (' + (30 - days_passed).toFixed() + ')');
+
+                            $('#savings_goal_is_locked').val('1');
+                            if(days_passed >= 30){
+                                // add is_closed, was_accomplished
+                                // Setup depending on whether we are inserting or updating.
+                                var type = "POST"; // Insert.
+                                var url = "http://192.168.1.6:8000/api/savings_goals";
+
+                                var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:true,earned_xp:25};
+
+                                jQuery.ajax({
+                                    url: url,
+                                    headers: {
+                                        Authorization: 'Token ' + localStorage.getItem('auth_token')
+                                    },
+                                    data: data,
+                                    type: type,
+                                    traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                                    success: function(json_result){
+                                        console.log(json_result);
+                                    },
+                                    error: function(xhr,status,error) {
+                                        // Print the error log to console.
+                                        console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                                        // Convert JSON string into javascript associative array.
+                                        var json = jQuery.parseJSON(xhr.responseText);
+                                        error_callback(json); // Return JSON
+                                    },
+                                    complete: function(xhr,status) {
+                                        // Do nothing.
+                                    }
+                                });
+                            }
+                            if(cur_goal.is_closed){
+                                console.debug('Previous goal closed, creating one now.');
+                                $('#id_goal_id').val();
+                                $('#id_goal_type').val(1);
+                                $('#savings_goal_is_locked').val('false');
+                                // Setup depending on whether we are inserting or updating.
+
+                                // post request to create a new empty goal
+                                var type = "POST"; // Insert.
+                                var url = "http://192.168.1.6:8000/api/savings_goals";
+                                var created_date = new Date().toJSON();
+                                var data = {user:localStorage.getItem('user_id'), created:created_date};
+
+                                jQuery.ajax({
+                                    url: url,
+                                    headers: {
+                                        Authorization: 'Token ' + localStorage.getItem('auth_token')
+                                    },
+                                    data: data,
+                                    type: type,
+                                    traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                                    success: function(json_result){
+                                        console.log(json_result);
+                                        cur_goal_id = json_result.results[0].id; // set goal id value
+                                    },
+                                    error: function(xhr,status,error) {
+                                        // Print the error log to console.
+                                        console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                                        // Convert JSON string into javascript associative array.
+                                        var json = jQuery.parseJSON(xhr.responseText);
+                                        error_callback(json); // Return JSON
+                                    },
+                                    complete: function(xhr,status) {
+                                        // Do nothing.
+                                    }
+                                });
+                            }
+                        }
+
+
+                    }
+                    //get latest saving goal for user id
+                    // if not found create one
+                    //if is closed create new goal
+
+                    // set lokced amount, etc
+                    // get time in 30 days and set
+                }
+            })
+        }
+
+        function lock_in_goal(){
+
         }
 
         function search_savings_goals(keyword, success_callback, error_callback) {
