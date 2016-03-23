@@ -27,7 +27,7 @@
     <script src="js/bootstrap.min.js"></script>
 
     <script src="js/global.js"></script>
-    <script src="js/pages/account.html"></script>
+    <script src="js/pages/account.js"></script>
 
 </head>
 <body>
@@ -61,7 +61,7 @@
     </div><!-- /header -->
 
     <div data-role="panel" data-position="right" data-display="overlay" data-theme="a" id="nav-menu-panel" align="center" data-dismissible="false">
-        <img src="../img/photo.png" class="user-image" />
+        <img src="img/photo.png" class="user-image" />
         <h5 class="greeting"></h5>
         <ul data-role="listview">
             <li>
@@ -316,14 +316,51 @@
                 handle_fly_notifications();
             }, 500);
 
+            ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
+
             get_profile();
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
+
+            new ShareButton({
+                networks: {
+                    pinterest: { enabled: false },
+                    reddit: { enabled: false },
+                    linkedin: { enabled: false },
+                    whatsapp: { enabled: false }
+                }
+            });
+
+            $('#newsletter-switch').on('change', function(){
+                $('#btnSaveChanges').show();
+            });
+
+            $('#btnSaveChanges').on('click', function(){
+
+                // Get the value of the "Wants Newsletter" and update "Me" object.
+                var wants_newsletter = $('#newsletter-switch').val();
+                if (wants_newsletter == "On") {
+                    wants_newsletter = "True";
+                } else {
+                    wants_newsletter = "False";
+                }
+
+                // Update "Me" objects.
+                ajax_update_me_with_wants_notification(wants_newsletter, function(message) {
+                    console.log(message);
+                });
+
+                // Hide the button message.
+                $(this).hide();
+            });
+            $('#btnDeleteAccount').on('click', function(){
+                $('#confirm-popup').popup('open');
+            });
         });
 
         function get_profile(){
-            var url = "http://192.168.1.6:8000/api/me/" + localStorage.getItem('user_id') + "/?format=json";
+            var url = "http://192.168.1.6:8000/api/me/?user_id=" + localStorage.getItem('user_id') + "&format=json";
 
             jQuery.ajax({
                 url: url,
@@ -336,7 +373,7 @@
                 type: 'GET',
                 success: function(json_results){
                     console.debug(json_results);
-                    build_profile_ui(json_results);
+                    build_profile_ui(json_results.results[0]);
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -351,6 +388,7 @@
         function build_profile_ui(data){
             var joined = new Date(data.created);
 
+            $('#name').text(data.first_name + ' ' + data.last_name);
             $('#joined').text(joined.toDateString());
             $('#levelnum').text('Level ' + data.xplevel);
 
@@ -401,6 +439,30 @@
                 type: 'GET',
                 success: function(json_results){
                     var cur_goal = json_results.results[json_results.results.length-1];
+                    var goal_date = new Date(cur_goal.created);
+                    console.log(goal_date.getTime());
+                    var today = new Date();
+                    today = new Date(today.setDate(today.getDate()-30));
+                    var days_passed = num_days_between(goal_date, today);
+
+                    var is_cur_goal = false;
+                    if( days_passed >= 30){
+                        is_cur_goal = true;
+                    }
+
+                    if( is_cur_goal ){
+                        if(cur_goal.is_locked == false ){
+                            $('#savings-goal-curr').text("No goal has been set");
+                        }
+                        else{
+                            $('#savings-goal-curr').text("I want to save $" + cur_goal.amount + " every " + cur_goal.times + " " + period);
+                        }
+                    }
+                    else{
+                        $('#savings-goal-curr').text("No goal has been set");
+                    }
+
+                    console.log(today);
                     if( json_results == '' ){
                         $('.goal-hist-savings').text('No Goal Set');
                     }
@@ -409,7 +471,7 @@
                             period = 'weeks';
                     else
                             period = 'months';
-                    $('#savings-goal-curr').text("I want to save $" + cur_goal.amount + " every " + cur_goal.times + " " + period);
+
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
