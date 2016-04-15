@@ -44,8 +44,8 @@
         <div class="progress-bar-div">
             <div class="progress">
                 <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
-                    XP
                 </div>
+                <div class="xp">XP</div>
             </div>
         </div>
         <div class="nav-menu">
@@ -104,45 +104,15 @@
     <input id="notification_id" type="hidden" value=0 />
     <input id="notification_type" type="hidden" value=0 />
 
-    <div data-role="popup" id="levelup-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
-        <div class="text-center">
-            <h3>You've earned a new FLY level!</h3>
-            <p class="text-left">Congratulations! You've just leveled up your financial skills! Let your friends know, and keep up the good work!</p>
-            <fieldset class="level-up-fieldset">
-                <h3 class="level" id="id_levelup_num">
-                    <!-- Level Number Placeholder -->
-                </h3>
-                <h4 class="level-title"  id="id_levelup_title">
-                    <!-- Description Placeholder -->
-                </h4>
-            </fieldset>
-            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
-            <button onclick="ajax_delete_this_notification(); $('#levelup-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
-        </div>
-    </div>
-
-    <div data-role="popup" id="badge-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
-        <div class="text-center">
-            <h3 id="id_new_badge_title">
-                <!-- Title Placeholder -->
-            </h3>
-            <p class="text-left" id="id_new_badge_description">
-                <!-- Description Placeholder -->
-            </p>
-            <p><i class="fa fa-3x fa-thumbs-up"></i></p>
-
-            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
-            <button onclick="ajax_delete_this_notification(); $('#badge-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
-        </div>
-    </div>
     <script src="js/notifications.js"></script>
     
     <div data-role="content">
         <div class="text-center">
             <!-- Savings -->
             <div class="my-boxes red-box goals-box">
-                <img src="{% static 'img/savings.png' %}" class="goals-img" />
+                <img src="img/savings.png" class="goals-img" />
                 <h2>Savings</h2>
+                <p>Your goal was:</p>
                 <p id="goal-text"></p>
                 <p>Did you complete your goal?</p>
                 <select id="goal-switch" data-role="slider" data-mini="true">
@@ -168,21 +138,10 @@
     </div>
     
     <div data-role="popup" id="goal-success-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
-        <div class="text-center">
-            <h2>Congratulations!</h2>
-            <h4>You completed your goal, this is awesome! 
+        <div class="text-center goal-success-html">
 
-            </h4>
-            <br/><br/>
-            <h4>You've Earned 25 xp</h4>
-            <p onclick="$('#badge-popup').popup('open')" style="margin-left:auto;margin-right:auto;border:2px solid #ddd;border-radius:50%;width:70px;padding:10px;">
-                <i class="fa fa-3x fa-thumbs-up" style="color:green;"></i></p>
-
-            <div class="social-sharing">
-                <share-button></share-button>
-            </div>
-            <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="load_goal();">OK</button>
         </div>
+        <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="window.location='savings.html'">OK</button>
     </div>
 
     <div data-role="popup" id="contacts-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
@@ -241,14 +200,23 @@
 <script>
     $(document).ready(function(){
         get_goal_by_user();
+        ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
+        get_xp_status();
     });
 
+    var has_earned_xp = 0;
+    var amt_xp = 25;
     var cur_goal_id = -1;
+    var cur_xp_lvl = -1;
+    var cur_xp = -1;
+    var lvl_max_xp = -1;
+    var lvl_title = -1;
+    var me_id = 0;
 
     // get the goal by goal user_id
     function get_goal_by_user(){
         var user = localStorage.getItem('user_id');
-        var url = "http://192.168.1.6:8000/api/savings_goals/?user=" + user + "&format=json";
+        var url = "http://192.168.42.233:8000/api/savings_goals/?user=" + user + "&format=json";
 
         jQuery.ajax({
             url: url,
@@ -262,6 +230,9 @@
             success: function(json_results){
                 console.debug(json_results);
                 var cur_goal = json_results.results[json_results.results.length-1];
+                if(cur_goal.is_locked || cur_goal.is_closed){
+                    // window.location='savings.html';
+                }
                 cur_goal_id = cur_goal.id;
                 var period = cur_goal.period;
                 if( period == 1 ){
@@ -270,7 +241,7 @@
                 else if(period == 2){
                     period = 'months';
                 }
-                $('#goal-text').text("I want to save " + cur_goal.amount + " every " + cur_goal.times + period);
+                $('#goal-text').text("I want to save " + cur_goal.amount + " every " + cur_goal.times + ' ' + period);
             },
             error: function(xhr,status,error) {
                 console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -281,10 +252,49 @@
         });
     }
 
-    function set_goal_accomplished(){
-        var url = "http://192.168.1.6:8000/api/savings_goals/" + cur_goal_id + "/?format=json";
-        var type = "POST"; // Insert.
-        var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:$('#goal-switch').val(),earned_xp:25};
+    function get_xp_status(){
+        get_me(
+            localStorage.getItem('user_id'),
+            function(result){
+                console.log(result);
+                cur_xp_lvl = result.results[0].xplevel;
+                cur_xp = result.results[0].xp;
+                me_id = result.results[0].id;
+            },
+            function(error){ console.log(error); }
+        );
+
+        setTimeout(function(){
+            var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+            var type = "GET";
+
+            jQuery.ajax({
+                url: url,
+                type: type,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                success: function(xp_result){
+                    console.log(xp_result);
+                    lvl_max_xp = xp_result.max_xp;
+                    lvl_title = xp_result.title;
+                }
+            })
+        }, 300);
+    }
+
+    function ajax_finish_savings_goal(){
+        var xp_earned = 25;
+        if($('#goal-switch').val() == "True"){
+            has_earned_xp = xp_earned;
+        }
+        else{
+            has_earned_xp = 0;
+        }
+
+        var url = "http://192.168.42.233:8000/api/savings_goals/" + cur_goal_id + "/?format=json";
+        var type = "PUT"; // Insert.
+        var data = {id:cur_goal_id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:$('#goal-switch').val(),earned_xp:has_earned_xp};
 
         jQuery.ajax({
             url: url,
@@ -294,8 +304,51 @@
             data: data,
             type: type,
             traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-            success: function(json_result){
+            success: function(json_result) {
                 console.log(json_result);
+                var popup_html = "";
+                if($('#goal-switch').val() == "True"){
+                    cur_xp += has_earned_xp;
+                    popup_html += "<h4>Congratulations you completed your goal!</h4>"
+                        + "<p>You've earned " + has_earned_xp + " XP</p>";
+                    if( cur_xp >= lvl_max_xp ){
+                        popup_html += "<p>And you've leveled up! You are now level " + (++cur_xp_lvl) + "</p>";
+
+                        var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+                        var type = "GET";
+
+                        jQuery.ajax({
+                            url: url,
+                            type: type,
+                            headers: {
+                                Authorization: 'Token ' + localStorage.getItem('auth_token')
+                            },
+                            success: function(xp_result){
+                                console.log(xp_result);
+                                lvl_max_xp = xp_result.max_xp;
+                                lvl_title = xp_result.title;
+                            }
+                        })
+                    }
+                    else{
+                        popup_html += "<p>You're only " + (lvl_max_xp - cur_xp) + " points away from the next level</p>";
+                    }
+                }
+                else if($('#goal-switch').val() == "False"){
+                    popup_html += "<h4>Sorry, you didn't complete your goal this time.</h4>"
+                            + "<p>Try to set a more attainable goal next time!</p>";
+                }
+                $('.goal-success-html').html(popup_html);
+                set_me(
+                        {id:me_id,user:localStorage.getItem('user_id'),xp:cur_xp,xplevel:cur_xp_lvl,xp_percent:((cur_xp/lvl_max_xp)*100)},
+                        function(json_result){
+                            console.log(json_result);
+                        },
+                        function(error){
+                            console.log(error);
+                        }
+                );
+                $('#goal-success-popup').popup('open');
             },
             error: function(xhr,status,error) {
                 // Print the error log to console.
@@ -303,7 +356,6 @@
 
                 // Convert JSON string into javascript associative array.
                 var json = jQuery.parseJSON(xhr.responseText);
-                error_callback(json); // Return JSON
             },
             complete: function(xhr,status) {
                 // Do nothing.

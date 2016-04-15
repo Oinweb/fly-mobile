@@ -44,8 +44,8 @@
         <div class="progress-bar-div">
             <div class="progress">
                 <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
-                    XP
                 </div>
+                <div class="xp">XP</div>
             </div>
         </div>
         <div class="nav-menu">
@@ -210,10 +210,12 @@
             $.mobile.ajaxEnabled = false;
             $.mobile.cors
             $.mobile.allowSamePageTransition = false;
+
+            ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
         });
 
         function get_courses(){
-            var url = 'http://192.168.1.6:8000/api/courses/?format=json&ordering=id';
+            var url = 'http://192.168.42.233:8000/api/courses/?format=json&ordering=id';
             $.ajax({
                 url: url,
                 cache: false,

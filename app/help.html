@@ -43,8 +43,8 @@
         <div class="progress-bar-div">
             <div class="progress">
                 <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
-                    XP
                 </div>
+                <div class="xp">XP</div>
             </div>
         </div>
         <div class="nav-menu">
@@ -146,7 +146,7 @@
                 Contact Us
             </h4>
             <p>If you have any questions about the usage of the program, or have found a bug, please send us a message and we will do our best to help you as quickly as we can.</p>
-            <form id="contactForm" method="post" action="http://192.168.1.6:8000/en/help/contact">
+            <form id="contactForm" method="post" action="http://192.168.42.233:8000/en/help/contact">
                 <div class="form-group">
                     <input type="text" id="name" name="name" placeholder="Name"/>
                 </div>
@@ -232,9 +232,11 @@
             $.mobile.allowSamePageTransition = false;
         });
 
+        ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
+
         function ajax_send_message(){
             var data = $('#contactForm').serializeArray();
-            var url = "http://192.168.1.6:8000/en/help/contact";
+            var url = "http://192.168.42.233:8000/en/help/contact";
             var type = "POST";
             var auth_headers = {
                 Authorization: 'Token ' + localStorage.getItem('auth_token')

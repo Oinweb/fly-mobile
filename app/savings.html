@@ -45,8 +45,8 @@
         <div class="progress-bar-div">
             <div class="progress">
                 <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
-                    XP
                 </div>
+                <div class="xp">XP</div>
             </div>
         </div>
         <div class="nav-menu">
@@ -262,7 +262,9 @@
             $.mobile.allowSamePageTransition = false;
 
             get_user_goals(localStorage.getItem('user_id'));
+            ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
         });
+
 
         var cur_goal_id = -1;
 
@@ -328,7 +330,7 @@
         {
             // Step 1: Fetch the Goal model object from the API.
             get_savings_goal(
-                    goal_id,
+                    cur_goal_id,
                     function(goal) {
                         // Step 2: Update the goal.
                         goal["amount"] = $('#save-dollars').val();
@@ -371,7 +373,7 @@
 
         function filter_savings_goals(criteria, success_callback, error_callback)
         {
-            var url = "http://192.168.1.6:8000/api/savings_goals/?format=json";
+            var url = "http://192.168.42.233:8000/api/savings_goals/?format=json";
             for (var i = 0; i < criteria.length; i++) {
                 url += "&";
 
@@ -407,7 +409,7 @@
         {
             // Setup depending on whether we are inserting or updating.
             var type = "POST"; // Insert.
-            var url = "http://192.168.1.6:8000/api/savings_goals/";
+            var url = "http://192.168.42.233:8000/api/savings_goals/";
             if (data['id'] > 0) {
                 type = "PUT"; // Update
                 url += data['id'] + "/";
@@ -439,7 +441,7 @@
         }
 
         function get_savings_goal(id, success_callback, error_callback) {
-            var url = "http://192.168.1.6:8000/api/savings_goals/" + id + "/?format=json";
+            var url = "http://192.168.42.233:8000/api/savings_goals/" + id + "/?format=json";
 
             jQuery.ajax({
                 url: url,
@@ -464,7 +466,7 @@
         }
 
         function get_user_goals(user_id){
-            var url = "http://192.168.1.6:8000/api/savings_goals/?user=" + user_id + "&format=json";
+            var url = "http://192.168.42.233:8000/api/savings_goals/?user=" + user_id + "&format=json";
 
             // do a get request for the user's savings goals
             jQuery.ajax({
@@ -477,7 +479,8 @@
                 success: function(get_result){
                     console.debug(get_result);
                     // if there are no results returned
-                    if( get_result.count == 0 ){
+
+                    if( get_result.count == 0 || get_result.results[get_result.count-1].is_closed){
                         console.debug('No previous user goal, creating one now.');
                         cur_goal_id = -1;
                         $('#savings_goal_is_locked').val('false');
@@ -485,7 +488,7 @@
 
                         // post request to create a new empty goal
                         var type = "POST"; // Insert.
-                        var url = "http://192.168.1.6:8000/api/savings_goals/";
+                        var url = "http://192.168.42.233:8000/api/savings_goals/";
                         var created_date = new Date().toJSON();
                         var data = {user:localStorage.getItem('user_id'), created:created_date};
 
@@ -499,7 +502,7 @@
                             traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
                             success: function(json_result){
                                 console.log(json_result);
-                                cur_goal_id = json_result.results[0].id; // set goal id value
+                                cur_goal_id = json_result.id; // set goal id value
                             },
                             error: function(xhr,status,error) {
                                 // Print the error log to console.
@@ -527,7 +530,7 @@
                         var goal_date = new Date(cur_goal.unlocks);
                         console.debug(goal_date);
                         var today = new Date();
-                        today = new Date(today.setDate(today.getDate()-30));
+                        today = new Date(today.setDate(today.getDate()));
                         var days_passed = num_days_between(goal_date, today);
                         cur_goal_id = cur_goal.id;
                         console.debug(cur_goal);
@@ -548,7 +551,7 @@
                                 // add is_closed, was_accomplished
                                 // Setup depending on whether we are inserting or updating.
                                 var type = "POST"; // Insert.
-                                var url = "http://192.168.1.6:8000/api/savings_goals";
+                                var url = "http://192.168.42.233:8000/api/savings_goals";
 
                                 var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:true,earned_xp:25};
 
@@ -562,44 +565,6 @@
                                     traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
                                     success: function(json_result){
                                         console.log(json_result);
-                                    },
-                                    error: function(xhr,status,error) {
-                                        // Print the error log to console.
-                                        console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-
-                                        // Convert JSON string into javascript associative array.
-                                        var json = jQuery.parseJSON(xhr.responseText);
-                                        error_callback(json); // Return JSON
-                                    },
-                                    complete: function(xhr,status) {
-                                        // Do nothing.
-                                    }
-                                });
-                            }
-                            if(cur_goal.is_closed){
-                                console.debug('Previous goal closed, creating one now.');
-                                $('#id_goal_id').val();
-                                $('#id_goal_type').val(1);
-                                $('#savings_goal_is_locked').val('false');
-                                // Setup depending on whether we are inserting or updating.
-
-                                // post request to create a new empty goal
-                                var type = "POST"; // Insert.
-                                var url = "http://192.168.1.6:8000/api/savings_goals";
-                                var created_date = new Date().toJSON();
-                                var data = {user:localStorage.getItem('user_id'), created:created_date};
-
-                                jQuery.ajax({
-                                    url: url,
-                                    headers: {
-                                        Authorization: 'Token ' + localStorage.getItem('auth_token')
-                                    },
-                                    data: data,
-                                    type: type,
-                                    traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-                                    success: function(json_result){
-                                        console.log(json_result);
-                                        cur_goal_id = json_result.results[0].id; // set goal id value
                                     },
                                     error: function(xhr,status,error) {
                                         // Print the error log to console.
@@ -628,12 +593,8 @@
             })
         }
 
-        function lock_in_goal(){
-
-        }
-
         function search_savings_goals(keyword, success_callback, error_callback) {
-            var url = "http://192.168.1.6:8000/api/savings_goals/?format=json&search="+keyword;
+            var url = "http://192.168.42.233:8000/api/savings_goals/?format=json&search="+keyword;
             jQuery.ajax({
                 url: url,
                 headers: {

@@ -27,12 +27,12 @@
     <script src="js/bootstrap.min.js"></script>
 
     <script src="js/global.js"></script>
+    <script src="js/pages/savings.js"></script>
 
 </head>
 <body>
 
-<!-- ---------- dashboard ------------- -->
-<div data-role="page" id="dashboard">
+<div data-role="page" style="background-color:#fff;" id="goal-page-savings-final">
 
     <div data-role="header" data-theme="b" data-id="header-nav" data-position="fixed" data-tap-toggle="false" class="text-center">
         <div class="user-info">
@@ -104,70 +104,44 @@
     <input id="notification_id" type="hidden" value=0 />
     <input id="notification_type" type="hidden" value=0 />
 
-    <div data-role="popup" id="levelup-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
-        <div class="text-center">
-            <h3>You've earned a new FLY level!</h3>
-            <p class="text-left">Congratulations! You've just leveled up your financial skills! Let your friends know, and keep up the good work!</p>
-            <fieldset class="level-up-fieldset">
-                <h3 class="level" id="id_levelup_num">
-                    <!-- Level Number Placeholder -->
-                </h3>
-                <h4 class="level-title"  id="id_levelup_title">
-                    <!-- Description Placeholder -->
-                </h4>
-            </fieldset>
-            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
-            <button onclick="ajax_delete_this_notification(); $('#levelup-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
-        </div>
-    </div>
-
-    <div data-role="popup" id="badge-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
-        <div class="text-center">
-            <h3 id="id_new_badge_title">
-                <!-- Title Placeholder -->
-            </h3>
-            <p class="text-left" id="id_new_badge_description">
-                <!-- Description Placeholder -->
-            </p>
-            <p><i class="fa fa-3x fa-thumbs-up"></i></p>
-
-            <button onclick="ajax_share_and_reload();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-comment">Share</button>
-            <button onclick="ajax_delete_this_notification(); $('#badge-popup').popup('close');" data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b">OK</button>
-        </div>
-    </div>
     <script src="js/notifications.js"></script>
-
-
+    
     <div data-role="content">
         <div class="text-center">
-
-            <div class="bubble tour-bubble" id="tour-bubble" style="display:none;"></div>
-
-            <h2 class="ui-bar ui-bar-a ui-corner-all" id="course-title"></h2>
-            <div class="ui-body ui-body-a ui-corner-all">
-                <p id="course-summary"></p>
-                <div class="videoWrapper">
-                    <iframe id="my-video" src="" frameborder="0" allowfullscreen></iframe>
-                </div>
-                <p id="course-description"></p>
-                <button id="btnTakeQuiz"
-                        data-icon="info"
-                        class="ui-btn ui-icon-edit ui-btn-icon-left ui-btn-b ui-corner-all ui-shadow">
-                    <span>Take Quiz</span>
-                </button>
+            <!-- Savings -->
+            <div class="my-boxes green-box goals-box">
+                <img src="img/oinweb-fly-goals.png" class="goals-img" />
+                <h2>Long Term Goal</h2>
+                <p>Your goal was:</p>
+                <p id="goal-text"></p>
+                <p>Did you complete your goal?</p>
+                <select id="goal-switch" data-role="slider" data-mini="true">
+                    <option selected="true" value="False">No</option>
+                    <option value="True">Yes</option>
+                </select>
+                <button data-icon="check" onclick="ajax_finish_savings_goal(cur_goal_id);">OK</button>
             </div>
+            <!-- end Savings -->
 
         </div>
+
     </div><!-- /content -->
 
     <div data-role="footer" data-theme="b" data-position="fixed" data-id="footer-nav" data-tap-toggle="false">
-        <data class="row">
+        <data class="row text-center">
             <div>
                 <p><small>Provided by Ontario Immigrant Network <br/> <a href="#" onclick="$('#contacts-popup').popup('open');">Contacts</a>
                     &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#privacy-popup').popup('open');">Privacy Policy</a>
                     &nbsp;&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#supporters-popup').popup('open');">Supporters</a></small></p>
             </div>
         </data>
+    </div>
+    
+    <div data-role="popup" id="goal-success-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center goal-success-html">
+
+        </div>
+        <button data-role="button" class="ui-btn ui-corner-all ui-shadow ui-btn-b" onclick="window.location='final.html'">OK</button>
     </div>
 
     <div data-role="popup" id="contacts-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
@@ -207,54 +181,204 @@
         </div>
     </div>
 
-    <script src="js/global.js"></script>
-    <script src="js/pages/learning_details.js"></script>
-    <script>
-        $(document).ready(function(){
-            // Add a slight deley before detect any notications and load UI.
-            setTimeout(function(){
-                handle_fly_notifications();
-            }, 500);
+    <!-- Error Modal -->
+    <div data-role="popup" id="error-popup" data-theme="a" class="ui-corner-all" data-transition="pop">
+        <div class="text-center">
+            <h3><i class="fa fa-2x fa-times"></i><div id="id_error_title"></div></h3>
+            <p id="error-text"><div id="id_error_message"></div></p>
+            <button data-role="button"
+                    class="ui-btn ui-corner-all ui-shadow ui-btn-b"
+                    onclick="$('#error-popup').popup('close');">
+                Close
+            </button>
+        </div>
+    </div>
+    <!-- end Message Modal -->
 
-            get_course_details();
-
-            $.mobile.ajaxEnabled = false;
-            $.mobile.allowSamePageTransition = false;
-
-            ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
-        });
-
-        function get_course_details(){
-            var course_id = get_get_var('id');
-
-            var url = 'http://192.168.1.6:8000/api/courses/' + course_id + '/?format=json';
-            $.ajax({
-                url: url,
-                cache: false,
-                contentType: false,
-                processData: false,
-                type: 'GET',
-                success: function(result){
-                    build_course_ui(result);
-                },
-                error: function(xhr, status, error){
-                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-                },
-                complete: function(xhr, status){
-                    // do nothing
-                }
-            })
-        }
-
-        function build_course_ui(data){
-            $('#course-title').text(data.title);
-            $('#course-summary').text(data.summary);
-            $('#course-description').text(data.description);
-            $('#my-video').attr('src',data.video_url);
-        }
-    </script>
 </div><!-- /page -->
 
+<script>
+    $(document).ready(function(){
+        get_goal_by_user();
+        ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
+        get_xp_status();
+    });
+
+    var has_earned_xp = 0;
+    var amt_xp = 25;
+    var cur_goal_id = -1;
+    var cur_xp_lvl = -1;
+    var cur_xp = -1;
+    var lvl_max_xp = -1;
+    var lvl_title = -1;
+    var me_id = 0;
+
+    // get the goal by goal user_id
+    function get_goal_by_user(){
+        var user = localStorage.getItem('user_id');
+        var url = "http://192.168.42.233:8000/api/final_goals/?user=" + user + "&format=json";
+
+        jQuery.ajax({
+            url: url,
+            headers: {
+                Authorization: 'Token ' + localStorage.getItem('auth_token')
+            },
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'GET',
+            success: function(json_results){
+                console.debug(json_results);
+                var cur_goal = json_results.results[json_results.results.length-1];
+                if(cur_goal.is_locked || cur_goal.is_closed){
+                    // window.location='savings.html';
+                }
+                cur_goal_id = cur_goal.id;
+                var for_want = cur_goal.for_want;
+                if(for_want == 1){
+                    for_want = "a house";
+                }
+                else if(for_want == 2){
+                    for_want = "a business";
+                }
+                else if(for_want == 3){
+                    for_want = "my education";
+                }
+                else if(for_want == 4){
+                    for_want = "a vacation";
+                }
+                else if(for_want == 5){
+                    for_want = "my retirement";
+                }
+                else if(for_want == 6){
+                    for_want = "general savings";
+                }
+                else if(for_want == 7){
+                    for_want = "other";
+                }
+
+                $('#goal-text').text("I want to save " + cur_goal.amount + " for " + for_want);
+            },
+            error: function(xhr,status,error) {
+                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+            },
+            complete: function(xhr,status) {
+                // Do nothing.
+            }
+        });
+    }
+
+    function get_xp_status(){
+        get_me(
+            localStorage.getItem('user_id'),
+            function(result){
+                console.log(result);
+                cur_xp_lvl = result.results[0].xplevel;
+                cur_xp = result.results[0].xp;
+                me_id = result.results[0].id;
+            },
+            function(error){ console.log(error); }
+        );
+
+        setTimeout(function(){
+            var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+            var type = "GET";
+
+            jQuery.ajax({
+                url: url,
+                type: type,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                success: function(xp_result){
+                    console.log(xp_result);
+                    lvl_max_xp = xp_result.max_xp;
+                    lvl_title = xp_result.title;
+                }
+            })
+        }, 300);
+    }
+
+    function ajax_finish_savings_goal(){
+        var xp_earned = 25;
+        if($('#goal-switch').val() == "True"){
+            has_earned_xp = xp_earned;
+        }
+        else{
+            has_earned_xp = 0;
+        }
+
+        var url = "http://192.168.42.233:8000/api/final_goals/" + cur_goal_id + "/?format=json";
+        var type = "PUT"; // Insert.
+        var data = {id:cur_goal_id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:$('#goal-switch').val(),earned_xp:has_earned_xp};
+
+        jQuery.ajax({
+            url: url,
+            headers: {
+                Authorization: 'Token ' + localStorage.getItem('auth_token')
+            },
+            data: data,
+            type: type,
+            traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+            success: function(json_result) {
+                console.log(json_result);
+                var popup_html = "";
+                if($('#goal-switch').val() == "True"){
+                    cur_xp += has_earned_xp;
+                    popup_html += "<h4>Congratulations you completed your goal!</h4>"
+                        + "<p>You've earned " + has_earned_xp + " XP</p>";
+                    if( cur_xp >= lvl_max_xp ){
+                        popup_html += "<p>And you've leveled up! You are now level " + (++cur_xp_lvl) + "</p>";
+
+                        var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+                        var type = "GET";
+
+                        jQuery.ajax({
+                            url: url,
+                            type: type,
+                            headers: {
+                                Authorization: 'Token ' + localStorage.getItem('auth_token')
+                            },
+                            success: function(xp_result){
+                                console.log(xp_result);
+                                lvl_max_xp = xp_result.max_xp;
+                                lvl_title = xp_result.title;
+                            }
+                        })
+                    }
+                    else{
+                        popup_html += "<p>You're only " + (lvl_max_xp - cur_xp) + " points away from the next level</p>";
+                    }
+                }
+                else if($('#goal-switch').val() == "False"){
+                    popup_html += "<h4>Sorry, you didn't complete your goal this time.</h4>"
+                            + "<p>Try to set a more attainable goal next time!</p>";
+                }
+                $('.goal-success-html').html(popup_html);
+                set_me(
+                        {id:me_id,user:localStorage.getItem('user_id'),xp:cur_xp,xplevel:cur_xp_lvl,xp_percent:((cur_xp/lvl_max_xp)*100)},
+                        function(json_result){
+                            console.log(json_result);
+                        },
+                        function(error){
+                            console.log(error);
+                        }
+                );
+                $('#goal-success-popup').popup('open');
+            },
+            error: function(xhr,status,error) {
+                // Print the error log to console.
+                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                // Convert JSON string into javascript associative array.
+                var json = jQuery.parseJSON(xhr.responseText);
+            },
+            complete: function(xhr,status) {
+                // Do nothing.
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

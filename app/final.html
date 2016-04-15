@@ -45,8 +45,8 @@
         <div class="progress-bar-div">
             <div class="progress">
                 <div id="id_me_xp" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: {{ request.me.xp_percent }}">
-                    XP
                 </div>
+                <div class="xp">XP</div>
             </div>
         </div>
         <div class="nav-menu">
@@ -260,7 +260,12 @@
 
             $.mobile.ajaxEnabled = false;
             $.mobile.allowSamePageTransition = false;
+
+            get_user_goals(localStorage.getItem('user_id'));
+            ajax_refresh_me_top_menu(localStorage.getItem('user_id'));
         });
+
+        var cur_goal_id = 0;
 
         function lockBox(cur_box) {
             $('.' + cur_box + '-box * input').attr('disabled', 'true');
@@ -304,20 +309,20 @@
             var goal_type = parseInt ( $('#id_goal_type').val() );
 
             if (goal_type == 3) {
-            console.log("Processing Final Goal");
-            ajax_set_final_goal(goal_id);
-        } else {
-            alert('Unknown goal selected.');
-            console.log("Goal ID: "+goal_id);
-            console.log("Goal Type: "+goal_type);
-        }
+                console.log("Processing Final Goal");
+                ajax_set_final_goal(goal_id);
+            } else {
+                alert('Unknown goal selected.');
+                console.log("Goal ID: "+goal_id);
+                console.log("Goal Type: "+goal_type);
+            }
         }
 
         function ajax_set_final_goal(goal_id)
         {
             // Step 1: Fetch the Goal model object from the API.
             get_final_goal(
-                    goal_id,
+                    cur_goal_id,
                     function(goal) {
                         // Step 2: Update the goal.
                         goal["amount"] = $('#goal-amount').val();
@@ -325,7 +330,13 @@
                         goal["for_other_want"] = parseInt( $('#final_goal_for_other_want').val() );
                         goal["is_locked"] = 'True';
                         var nowPlus30Days = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)); // Now + 30 days.
-                        goal["unlocks"] = date_to_django_date(nowPlus30Days);
+                        goal["unlocks"] = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)); // Now + 30 days.
+                        goal["unlocks"] = nowPlus30Days.getFullYear() + '-' +
+                                nowPlus30Days.getMonth() +
+                                '-' +  nowPlus30Days.getDate() +
+                                'T' + nowPlus30Days.getHours() +
+                                ':' + nowPlus30Days.getMinutes() +
+                                ':' + nowPlus30Days.getSeconds() + "Z";
 
                         // Step 3: Save the goal.
                         set_final_goal(
@@ -338,7 +349,7 @@
                                 },
                                 function(error_json) {
                                     $('#error-popup').popup('open');
-                                    $('#id_error_title').html('Savings');
+                                    $('#id_error_title').html('Error saving goal');
                                     $('#id_error_message').html('An unknown error occured when saving goal, please see log.');
                                     console.log(error_json);
                                 }
@@ -355,7 +366,7 @@
 
         function filter_final_goals(criteria, success_callback, error_callback)
         {
-            var url = "http://192.168.1.6:8000/api/final_goals/?format=json";
+            var url = "http://192.168.42.233:8000/api/final_goals/?format=json";
             for (var i = 0; i < criteria.length; i++) {
                 url += "&";
 
@@ -391,7 +402,7 @@
         {
             // Setup depending on whether we are inserting or updating.
             var type = "POST"; // Insert.
-            var url = "http://192.168.1.6:8000/api/final_goals/";
+            var url = "http://192.168.42.233:8000/api/final_goals/";
             if (data['id'] > 0) {
                 type = "PUT"; // Update
                 url += data['id'] + "/";
@@ -423,7 +434,7 @@
         }
 
         function get_final_goal(id, success_callback, error_callback) {
-            var url = "http://192.168.1.6:8000/api/final_goals/" + id + "/?format=json";
+            var url = "http://192.168.42.233:8000/api/final_goals/" + id + "/?format=json";
 
             jQuery.ajax({
                 url: url,
@@ -447,8 +458,136 @@
             });
         }
 
+        function get_user_goals(user_id){
+            var url = "http://192.168.42.233:8000/api/final_goals/?user=" + user_id + "&format=json";
+
+            // do a get request for the user's savings goals
+            jQuery.ajax({
+                url: url,
+                type:'GET',
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                success: function(get_result){
+                    console.debug(get_result);
+                    // if there are no results returned
+
+                    if( get_result.count == 0 || get_result.results[get_result.count-1].is_closed){
+                        console.debug('No previous user goal, creating one now.');
+                        cur_goal_id = -1;
+                        $('#savings_goal_is_locked').val('false');
+                        // Setup depending on whether we are inserting or updating.
+
+                        // post request to create a new empty goal
+                        var type = "POST"; // Insert.
+                        var url = "http://192.168.42.233:8000/api/final_goals/";
+                        var created_date = new Date().toJSON();
+                        var data = {user:localStorage.getItem('user_id'), created:created_date};
+
+                        jQuery.ajax({
+                            url: url,
+                            headers: {
+                                Authorization: 'Token ' + localStorage.getItem('auth_token')
+                            },
+                            data: data,
+                            type: type,
+                            traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                            success: function(json_result){
+                                console.log(json_result);
+                                cur_goal_id = json_result.id; // set goal id value
+                            },
+                            error: function(xhr,status,error) {
+                                // Print the error log to console.
+                                console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                                // Convert JSON string into javascript associative array.
+                                var json = jQuery.parseJSON(xhr.responseText);
+                            },
+                            complete: function(xhr,status) {
+                                // Do nothing.
+                            }
+                        });
+                    }
+                    // if one or more goals are returned
+                    else{
+                        // get the last goal in the list
+                        var cur_goal = get_result.results[get_result.results.length-1];
+
+                        if( cur_goal.amount == 0 || cur_goal.times == 0){
+                            cur_goal_id = cur_goal.id;
+                            return;
+                        }
+
+                        // check how many days have passed since the goal was locked
+                        var goal_date = new Date(cur_goal.unlocks);
+                        console.debug(goal_date);
+                        var today = new Date();
+                        today = new Date(today.setDate(today.getDate()));
+                        var days_passed = num_days_between(goal_date, today);
+                        cur_goal_id = cur_goal.id;
+                        console.debug(cur_goal);
+                        $('#savings_goal_is_locked').val('false');
+
+                        // if the current goal is locked
+                        if(cur_goal.is_locked){
+                            // setup ui for locked appearance
+                            $('#goal-amount').attr('disabled','true').val(cur_goal.amount);
+                            $('#goal-for')[0].selectedIndex = cur_goal.for_want-1;
+                            $('#goal-for').attr('disabled','true').selectmenu('refresh');
+                            $('#green-btn').buttonMarkup({icon: 'lock'});
+                            $('#green-btn').data('icon','lock');
+                            $('#green-btn').text('Goal Locked (' + (30 - days_passed).toFixed() + ')');
+
+                            $('#savings_goal_is_locked').val('1');
+                            if(days_passed >= 30){
+                                // add is_closed, was_accomplished
+                                // Setup depending on whether we are inserting or updating.
+                                var type = "POST"; // Insert.
+                                var url = "http://192.168.42.233:8000/api/final_goals";
+
+                                var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:true,earned_xp:25};
+
+                                jQuery.ajax({
+                                    url: url,
+                                    headers: {
+                                        Authorization: 'Token ' + localStorage.getItem('auth_token')
+                                    },
+                                    data: data,
+                                    type: type,
+                                    traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
+                                    success: function(json_result){
+                                        console.log(json_result);
+                                    },
+                                    error: function(xhr,status,error) {
+                                        // Print the error log to console.
+                                        console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+
+                                        // Convert JSON string into javascript associative array.
+                                        var json = jQuery.parseJSON(xhr.responseText);
+                                        error_callback(json); // Return JSON
+                                    },
+                                    complete: function(xhr,status) {
+                                        // Do nothing.
+                                    }
+                                });
+                            }
+                        }
+
+
+                    }
+                    //get latest saving goal for user id
+                    // if not found create one
+                    //if is closed create new goal
+
+                    // set lokced amount, etc
+                    // get time in 30 days and set
+                }
+            })
+        }
+
         function search_final_goals(keyword, success_callback, error_callback) {
-            var url = "http://192.168.1.6:8000/api/final_goals/?format=json&search="+keyword;
+            var url = "http://192.168.42.233:8000/api/final_goals/?format=json&search="+keyword;
             jQuery.ajax({
                 url: url,
                 headers: {

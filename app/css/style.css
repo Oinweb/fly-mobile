@@ -193,6 +193,23 @@
     width:100%;
     margin: 0 auto;
 }
+
+.ui-header .progress-bar-div .progress .xp{
+    color:#000 !important;
+    text-shadow:none;
+    text-align:center;
+    float:right;
+    display:inline-block;
+    width:100%;
+    position:relative;
+    top:-20px;
+}
+.ui-header .progress-bar-div .progress #id_me_xp{
+    float:left;
+    display:inline-block;
+    position:relative;
+    min-width:1%;
+}
 .ui-header .progress-bar-div {
     text-align: center;
     display: inline-block;
