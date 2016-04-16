@@ -366,7 +366,7 @@
 
         function filter_final_goals(criteria, success_callback, error_callback)
         {
-            var url = "http://192.168.42.233:8000/api/final_goals/?format=json";
+            var url = "http://127.0.0.1:8000/api/final_goals/?format=json";
             for (var i = 0; i < criteria.length; i++) {
                 url += "&";
 
@@ -402,7 +402,7 @@
         {
             // Setup depending on whether we are inserting or updating.
             var type = "POST"; // Insert.
-            var url = "http://192.168.42.233:8000/api/final_goals/";
+            var url = "http://127.0.0.1:8000/api/final_goals/";
             if (data['id'] > 0) {
                 type = "PUT"; // Update
                 url += data['id'] + "/";
@@ -434,7 +434,7 @@
         }
 
         function get_final_goal(id, success_callback, error_callback) {
-            var url = "http://192.168.42.233:8000/api/final_goals/" + id + "/?format=json";
+            var url = "http://127.0.0.1:8000/api/final_goals/" + id + "/?format=json";
 
             jQuery.ajax({
                 url: url,
@@ -459,7 +459,7 @@
         }
 
         function get_user_goals(user_id){
-            var url = "http://192.168.42.233:8000/api/final_goals/?user=" + user_id + "&format=json";
+            var url = "http://127.0.0.1:8000/api/final_goals/?user=" + user_id + "&format=json";
 
             // do a get request for the user's savings goals
             jQuery.ajax({
@@ -481,7 +481,7 @@
 
                         // post request to create a new empty goal
                         var type = "POST"; // Insert.
-                        var url = "http://192.168.42.233:8000/api/final_goals/";
+                        var url = "http://127.0.0.1:8000/api/final_goals/";
                         var created_date = new Date().toJSON();
                         var data = {user:localStorage.getItem('user_id'), created:created_date};
 
@@ -544,7 +544,7 @@
                                 // add is_closed, was_accomplished
                                 // Setup depending on whether we are inserting or updating.
                                 var type = "POST"; // Insert.
-                                var url = "http://192.168.42.233:8000/api/final_goals";
+                                var url = "http://127.0.0.1:8000/api/final_goals";
 
                                 var data = {id:cur_goal.id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:true,earned_xp:25};
 
@@ -587,7 +587,7 @@
         }
 
         function search_final_goals(keyword, success_callback, error_callback) {
-            var url = "http://192.168.42.233:8000/api/final_goals/?format=json&search="+keyword;
+            var url = "http://127.0.0.1:8000/api/final_goals/?format=json&search="+keyword;
             jQuery.ajax({
                 url: url,
                 headers: {

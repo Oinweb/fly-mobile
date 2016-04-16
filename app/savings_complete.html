@@ -216,7 +216,7 @@
     // get the goal by goal user_id
     function get_goal_by_user(){
         var user = localStorage.getItem('user_id');
-        var url = "http://192.168.42.233:8000/api/savings_goals/?user=" + user + "&format=json";
+        var url = "http://127.0.0.1:8000/api/savings_goals/?user=" + user + "&format=json";
 
         jQuery.ajax({
             url: url,
@@ -265,7 +265,7 @@
         );
 
         setTimeout(function(){
-            var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+            var url = "http://127.0.0.1:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
             var type = "GET";
 
             jQuery.ajax({
@@ -292,7 +292,7 @@
             has_earned_xp = 0;
         }
 
-        var url = "http://192.168.42.233:8000/api/savings_goals/" + cur_goal_id + "/?format=json";
+        var url = "http://127.0.0.1:8000/api/savings_goals/" + cur_goal_id + "/?format=json";
         var type = "PUT"; // Insert.
         var data = {id:cur_goal_id,user:localStorage.getItem('user_id'),is_closed:true,was_accomplished:$('#goal-switch').val(),earned_xp:has_earned_xp};
 
@@ -314,7 +314,7 @@
                     if( cur_xp >= lvl_max_xp ){
                         popup_html += "<p>And you've leveled up! You are now level " + (++cur_xp_lvl) + "</p>";
 
-                        var url = "http://192.168.42.233:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
+                        var url = "http://127.0.0.1:8000/api/xplevels/" + cur_xp_lvl + "/?format=json";
                         var type = "GET";
 
                         jQuery.ajax({

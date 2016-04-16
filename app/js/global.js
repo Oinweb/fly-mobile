@@ -32,7 +32,7 @@ function sign_in(username, password, success_callback, error_callback) {
         'username': username,
         'password': password,
     };
-    var url = "http://192.168.42.233:8000/api/logins/0/sign_in/?format=json";
+    var url = "http://127.0.0.1:8000/api/logins/0/sign_in/?format=json";
     var type = "POST"; // Insert.
 
     $.ajax({
@@ -46,7 +46,7 @@ function sign_in(username, password, success_callback, error_callback) {
             localStorage.setItem('auth_token', json_result.token);
             localStorage.setItem('user_id', json_result.user_id);
 
-            var dashboard = window.open("http://192.168.42.233:8000/en/dashboard");
+            var dashboard = window.open("http://127.0.0.1:8000/en/dashboard");
             setTimeout(function(){
                 dashboard.close();
             }, 5000);
@@ -69,7 +69,7 @@ function sign_in(username, password, success_callback, error_callback) {
 }
 
 function sign_off(success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/logins/0/sign_off/?format=json";
+    var url = "http://127.0.0.1:8000/api/logins/0/sign_off/?format=json";
 
     $.ajax({
         url: url,
@@ -101,7 +101,7 @@ function registration(username, email, password, first_name, last_name, success_
         'first_name': first_name,
         'last_name': last_name,
     };
-    var url = "http://192.168.42.233:8000/api/registers/0/registration/?format=json";
+    var url = "http://127.0.0.1:8000/api/registers/0/registration/?format=json";
 
     jQuery.ajax({
         url: url,
@@ -142,7 +142,7 @@ function ajax_refresh_me_top_menu(user_id) {
             $('.progress .xp').html(xp_score);
 
             var xp_percent = me.results[0].xp_percent;
-            $('#id_me_xp').css('width', xp_percent);
+            $('#id_me_xp').css('width', xp_percent + '%');
         },
         function(json_error) {
             console.log(json_error);
@@ -180,7 +180,7 @@ var num_days_between = function(d1, d2) {
 };
 
 function check_me_status(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/me/?user=" + id + "&format=json";
+    var url = "http://127.0.0.1:8000/api/me/?user=" + id + "&format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -228,7 +228,7 @@ function set_me(data, success_callback, error_callback)
 {
     // Setup depending on whether we are inserting or updating.
     var type = "POST"; // Insert.
-    var url = "http://192.168.42.233:8000/api/me/";
+    var url = "http://127.0.0.1:8000/api/me/";
     if (data['id'] > 0) {
         type = "PUT"; // Update
         url += data['id'] + "/";
@@ -260,7 +260,7 @@ function set_me(data, success_callback, error_callback)
 }
 
 function get_me(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/me/?user_id=" + id + "&format=json";
+    var url = "http://127.0.0.1:8000/api/me/?user_id=" + id + "&format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -284,7 +284,7 @@ function get_me(id, success_callback, error_callback) {
 }
 
 function delete_me(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/me/" + id + "/";
+    var url = "http://127.0.0.1:8000/api/me/" + id + "/";
     jQuery.ajax({
         url: url,
         headers: {
@@ -308,7 +308,7 @@ function delete_me(id, success_callback, error_callback) {
 }
 
 function evaluate_me(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/me/" + id + "/evaluate_me/?format=json";
+    var url = "http://127.0.0.1:8000/api/me/" + id + "/evaluate_me/?format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -334,7 +334,7 @@ function evaluate_me(id, success_callback, error_callback) {
 /* ------------- notification popups -------------- */
 function filter_notifications(criteria, success_callback, error_callback)
 {
-    var url = "http://192.168.42.233:8000/api/notifications/?format=json";
+    var url = "http://127.0.0.1:8000/api/notifications/?format=json";
     for (var i = 0; i < criteria.length; i++) {
         url += "&";
 
@@ -370,7 +370,7 @@ function set_notification(data, success_callback, error_callback)
 {
     // Setup depending on whether we are inserting or updating.
     var type = "POST"; // Insert.
-    var url = "http://192.168.42.233:8000/api/notifications/";
+    var url = "http://127.0.0.1:8000/api/notifications/";
     if (data['id'] > 0) {
         type = "PUT"; // Update
         url += data['id'] + "/";
@@ -402,7 +402,7 @@ function set_notification(data, success_callback, error_callback)
 }
 
 function get_notification(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/notifications/" + id + "/?format=json";
+    var url = "http://127.0.0.1:8000/api/notifications/" + id + "/?format=json";
     jQuery.ajax({
         url: url,
         headers: {
@@ -426,7 +426,7 @@ function get_notification(id, success_callback, error_callback) {
 }
 
 function delete_notification(id, success_callback, error_callback) {
-    var url = "http://192.168.42.233:8000/api/notifications/" + id + "/";
+    var url = "http://127.0.0.1:8000/api/notifications/" + id + "/";
     jQuery.ajax({
         url: url,
         headers: {

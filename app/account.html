@@ -161,7 +161,7 @@
                 </li>
                 <li>
                     <span>Experience</span>
-                    <span class="fright text-right" style="color:green;" id="xp">{{ request.me.xp }}/{{ request.me.xplevel.max_xp }} xp</span>
+                    <span class="fright text-right" style="color:green;" id="xp"></span>
                 </li>
                 <!--
                     <li>
@@ -193,16 +193,11 @@
                     <h4>Goal History</h4>
                 </li>
                 <li style="padding: 0;margin: 0;">
-                    <div data-role="collapsibleset" data-corners="true" style="margin: 0px;">
-                        <div data-role="collapsible" data-corners="false">
-                            <h4>Last Month</h4>
-                            <ul data-role="listview" data-corners="false" data-inset="false" style="margin: 0px;">
-                                <li class="goal-notset" style="padding:10px;"><span>Savings Goal</span><p class="goal-hist-savings"></p></li>
-                                <li class="goal-notset" style="padding:10px;"><span>Credit Goal</span><p class="goal-hist-credit"></p></li>
-                                <li class="goal-notset" style="padding:10px;"><span>Long-term Goal</span><p class="goal-hist-final"></p></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <ul data-role="listview" id="goal-hist-ul" data-corners="false" data-inset="false" style="margin: 0px;">
+                        <li data-icon="false" class="goal-notset"><a><span>Saving</span><p class="goal-hist-savings"></p></a></li>
+                        <li data-icon="false" class="goal-notset"><a><span>Credit</span><p class="goal-hist-credit"></p></a></li>
+                        <li data-icon="false" class="goal-notset"><a><span>Long-term</span><p class="goal-hist-final"></p></a></li>
+                    </ul>
                 </li>
             </ul>
 
@@ -360,7 +355,7 @@
         });
 
         function get_profile(){
-            var url = "http://192.168.42.233:8000/api/me/?user_id=" + localStorage.getItem('user_id') + "&format=json";
+            var url = "http://127.0.0.1:8000/api/me/?user_id=" + localStorage.getItem('user_id') + "&format=json";
 
             jQuery.ajax({
                 url: url,
@@ -377,7 +372,6 @@
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-                    error_callback(xhr.responseText);
                 },
                 complete: function(xhr,status) {
                     // Do nothing.
@@ -401,7 +395,7 @@
                 $('#newsletter-switch').slider('refresh');
             }
 
-            var url = "http://192.168.42.233:8000/api/xplevels/" + data.xplevel + "/?format=json";
+            var url = "http://127.0.0.1:8000/api/xplevels/" + data.xplevel + "/?format=json";
 
             // get xp level title and max xp
             jQuery.ajax({
@@ -427,7 +421,7 @@
             });
 
             // get savings goals
-            var url = "http://192.168.42.233:8000/api/savings_goals/?format=json"
+            var url = "http://127.0.0.1:8000/api/savings_goals/?format=json";
             jQuery.ajax({
                 url: url,
                 headers: {
@@ -442,17 +436,31 @@
                     var goal_date = new Date(cur_goal.created);
                     console.log(goal_date.getTime());
                     var today = new Date();
-                    today = new Date(today.setDate(today.getDate()-30));
+                    today = new Date(today.setDate(today.getDate()));
                     var days_passed = num_days_between(goal_date, today);
 
                     var is_cur_goal = false;
-                    if( days_passed >= 30){
+                    if( days_passed > 0){
                         is_cur_goal = true;
                     }
 
                     if( is_cur_goal ){
-                        if(cur_goal.is_locked == false ){
+                        var period = '';
+                        if( cur_goal.period == 1 )
+                            period = 'weeks';
+                        else
+                            period = 'months';
+                        if(cur_goal.is_locked == false || cur_goal.is_closed == true){
                             $('#savings-goal-curr').text("No goal has been set");
+                            if(cur_goal.is_closed == true){
+                                $('.goal-hist-credit').text("I want to save $" + cur_goal.amount + " every " + cur_goal.times + " " + period);
+                                if(cur_goal.was_accomplished == true){
+                                    $('.goal-hist-credit').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').data('icon','check');
+                                }
+                                else{
+                                    $('.goal-hist-savings').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').data('icon','delete');
+                                }
+                            }
                         }
                         else{
                             $('#savings-goal-curr').text("I want to save $" + cur_goal.amount + " every " + cur_goal.times + " " + period);
@@ -462,48 +470,106 @@
                         $('#savings-goal-curr').text("No goal has been set");
                     }
 
-                    console.log(today);
-                    if( json_results == '' ){
-                        $('.goal-hist-savings').text('No Goal Set');
-                    }
-                    var period = '';
-                    if( cur_goal.period == 1 )
+                    if( json_results.count > 1 ){
+                        var last_goal = json_results.results[json_results.results.length-2];
+                        var period = '';
+                        if( last_goal.period == 1 )
                             period = 'weeks';
-                    else
+                        else
+                            period = 'months';
+                        $('.goal-hist-savings').text("I want to save $" + last_goal.amount + " every " + last_goal.times + " " + period);
+                        if(last_goal.was_accomplished == true){
+                            $('.goal-hist-savings').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').buttonMarkup({icon:'check', iconpos:'right'});
+                        }
+                        else{
+                            $('.goal-hist-savings').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').buttonMarkup({icon:'delete', iconpos:'right'});
+                        }
+                    }
+                    if( json_results.count <= 1 ){
+                        $('.goal-hist-credit').text('No goal was set');
+                    }
+
+
+                },
+                error: function(xhr,status,error) {
+                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
+                },
+                complete: function(xhr,status) {
+                    // Do nothing.
+                }
+            });
+
+            // get credit goals
+            var url = "http://127.0.0.1:8000/api/credit_goals/?format=json"
+            jQuery.ajax({
+                url: url,
+                headers: {
+                    Authorization: 'Token ' + localStorage.getItem('auth_token')
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'GET',
+                success: function(json_results){
+                    var cur_goal = json_results.results[json_results.results.length-1];
+                    var goal_date = new Date(cur_goal.created);
+                    console.log(goal_date.getTime());
+                    var today = new Date();
+                    today = new Date(today.setDate(today.getDate()));
+                    var days_passed = num_days_between(goal_date, today);
+
+                    var is_cur_goal = false;
+                    if( days_passed > 0){
+                        is_cur_goal = true;
+                    }
+
+                    if( is_cur_goal ){
+                        var period = '';
+                        if( cur_goal.period == 1 )
+                            period = 'weeks';
+                        else
                             period = 'months';
 
-                },
-                error: function(xhr,status,error) {
-                    console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-                    error_callback(xhr.responseText);
-                },
-                complete: function(xhr,status) {
-                    // Do nothing.
-                }
-            });
-
-            // get credit goals
-            var url = "http://192.168.42.233:8000/api/credit_goals/?format=json"
-            jQuery.ajax({
-                url: url,
-                headers: {
-                    Authorization: 'Token ' + localStorage.getItem('auth_token')
-                },
-                cache: false,
-                contentType: false,
-                processData: false,
-                type: 'GET',
-                success: function(json_results){
-                    var cur_goal = json_results.results[json_results.results.length-1];
-                    if( json_results.results.length <= 1 ){
-                        $('.goal-hist-credit').text('No Goal Set');
+                        if(cur_goal.is_locked == false || cur_goal.is_closed == true){
+                            $('#credit-goal-curr').text("No goal has been set");
+                            if(cur_goal.is_closed == true){
+                                $('.goal-hist-credit').text("I want to raise my credit score by " + cur_goal.points + " points every " + cur_goal.times + " " + period);
+                                if(cur_goal.was_accomplished == true){
+                                    $('.goal-hist-credit').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').buttonMarkup({icon:'check', iconpos:'right'});
+                                }
+                                else{
+                                    $('.goal-hist-credit').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').buttonMarkup({icon:'delete', iconpos:'right'});
+                                }
+                            }
+                        }
+                        else{
+                            $('#credit-goal-curr').text("I want to raise my credit score by " + cur_goal.points + " points every " + cur_goal.times + " " + period);
+                        }
                     }
-                    var period = '';
-                    if( cur_goal.period == 1 )
-                        period = 'weeks';
-                    else
-                        period = 'months';
-                    $('#credit-goal-curr').text("I want to raise my credit score by " + cur_goal.points + " every " + cur_goal.times + " " + period);
+                    else{
+                        $('#credit-goal-curr').text("No goal has been set");
+                    }
+
+                    if( json_results.count > 1 ){
+                        var last_goal = json_results.results[json_results.results.length-2];
+                        var period = '';
+                        if( last_goal.period == 1 )
+                            period = 'weeks';
+                        else
+                            period = 'months';
+                        $('.goal-hist-credit').text("I want to raise my credit score by " + last_goal.points + " points every " + last_goal.times + " " + period);
+                        if(last_goal.was_accomplished == true){
+                            $('.goal-hist-credit').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').buttonMarkup({icon:'check', iconpos:'right'});
+                        }
+                        else{
+                            $('.goal-hist-credit').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').buttonMarkup({icon:'delete', iconpos:'right'});
+                        }
+                    }
+                    if( json_results.count <= 1 ){
+                        $('.goal-hist-credit').text('No goal was set');
+                    }
+
+
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -515,7 +581,7 @@
             });
 
             // get credit goals
-            var url = "http://192.168.42.233:8000/api/final_goals/?format=json"
+            var url = "http://127.0.0.1:8000/api/final_goals/?format=json"
             jQuery.ajax({
                 url: url,
                 headers: {
@@ -527,36 +593,113 @@
                 type: 'GET',
                 success: function(json_results){
                     var cur_goal = json_results.results[json_results.results.length-1];
+                    var goal_date = new Date(cur_goal.created);
+                    console.log(goal_date.getTime());
+                    var today = new Date();
+                    today = new Date(today.setDate(today.getDate()));
+                    var days_passed = num_days_between(goal_date, today);
+
+                    var is_cur_goal = false;
+                    if( days_passed > 0){
+                        is_cur_goal = true;
+                    }
+
                     if( json_results.results.length <= 1 ){
                         $('.goal-hist-final').text('No Goal Set');
                     }
-                    var goal = '';
-                    switch(cur_goal.for_want){
-                        case 1:
-                            goal = 'a house';
-                            break;
-                        case 2:
-                            goal = 'a businesss';
-                            break;
-                        case 3:
-                            goal = 'education';
-                            break;
-                        case 4:
-                            goal = 'vacation';
-                            break;
-                        case 5:
-                            goal = 'retirement';
-                            break;
-                        case 6:
-                            goal = 'general savings';
-                            break;
+
+                    if( is_cur_goal ) {
+                        var goal = '';
+                        switch (cur_goal.for_want) {
+                            case 1:
+                                goal = 'a house';
+                                break;
+                            case 2:
+                                goal = 'a businesss';
+                                break;
+                            case 3:
+                                goal = 'education';
+                                break;
+                            case 4:
+                                goal = 'vacation';
+                                break;
+                            case 5:
+                                goal = 'retirement';
+                                break;
+                            case 6:
+                                goal = 'general savings';
+                                break;
+                            case 7:
+                                goal = 'other';
+                                break;
+                        }
+
+                        if (cur_goal.for_other_want != '' && cur_goal.for_other_want != 'NaN') {
+                            goal = cur_goal.for_other_want;
+                        }
+                        if(cur_goal.is_locked == false || cur_goal.is_closed == true){
+                            $('#final-goal-curr').text("No goal has been set")
+                            if(cur_goal.is_closed == true){
+                                $('.goal-hist-final').text("I want to save $" + cur_goal.amount + " for " + goal);
+                                if(cur_goal.was_accomplished == true){
+                                    $('.goal-hist-final').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').buttonMarkup({icon:'check', iconpos:'right'});
+                                }
+                                else{
+                                    $('.goal-hist-final').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').buttonMarkup({icon:'delete', iconpos:'right'});
+                                }
+                            }
+                        }
+                        else {
+                            $('#final-goal-curr').text("I want to save $" + cur_goal.amount + " for " + goal);
+                        }
+                    }
+                    else{
+                        $('#final-goal-curr').text('No goal has been set');
                     }
 
-                    if( cur_goal.for_other_want != '' ){
-                        goal = cur_goal.for_other_want;
-                    }
+                    if( json_results.count > 1 ){
+                        var last_goal = json_results.results[json_results.results.length-2];
 
-                    $('#final-goal-curr').text("I want to save $" + cur_goal.amount + " for " + goal);
+                        var goal = '';
+                        switch (cur_goal.for_want) {
+                            case 1:
+                                goal = 'a house';
+                                break;
+                            case 2:
+                                goal = 'a businesss';
+                                break;
+                            case 3:
+                                goal = 'education';
+                                break;
+                            case 4:
+                                goal = 'vacation';
+                                break;
+                            case 5:
+                                goal = 'retirement';
+                                break;
+                            case 6:
+                                goal = 'general savings';
+                                break;
+                            case 7:
+                                goal = 'other';
+                                break;
+                        }
+
+                        if (cur_goal.for_other_want != '' && cur_goal.for_other_want != 'NaN') {
+                            goal = cur_goal.for_other_want;
+                        }
+
+                        $('.goal-hist-final').text("I want to save $" + last_goal.amount + " for " + goal);
+                        if(last_goal.was_accomplished == true){
+                            $('.goal-hist-final').parentsUntil('ul').addClass('goal-success').removeClass('goal-notset').buttonMarkup({icon:'check', iconpos:'right'});
+                        }
+                        else{
+                            $('.goal-hist-final').parentsUntil('ul').addClass('goal-fail').removeClass('goal-notset').buttonMarkup({icon:'delete', iconpos:'right'});
+                        }
+                    }
+                    if( json_results.count <= 1 ){
+                        $('.goal-hist-credit').text('No goal was set');
+                    }
                 },
                 error: function(xhr,status,error) {
                     console.debug(status + ': ' + error + ' -- ' + xhr.responseText);

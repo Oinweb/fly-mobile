@@ -506,21 +506,21 @@
 .ui-content .ui-collapsible{
     margin: 0;
 }
-.ui-content .ui-listview .goal-fail a{
-    background-color: #E66771;
-    text-shadow: none;
+.goal-fail{
+    background-color: #E66771 !important;
+    text-shadow: none !important;
 }
-.ui-content .ui-listview .goal-success a{
-    background-color: #92C472;
-    text-shadow: none;
+.goal-success{
+    background-color: #92C472 !important;
+    text-shadow: none !important;
 }
-.ui-content .ui-listview .goal-locked a{
-    background-color: gold;
-    text-shadow: none;
+.goal-locked{
+    background-color: gold !important;
+    text-shadow: none !important;
 }
-.ui-content .ui-listview .goal-notset a{
-    background-color: #fefefe;
-    text-shadow: none;
+.goal-notset{
+    background-color: #fefefe !important;
+    text-shadow: none !important;
 }
 .ui-content .ui-collapsible .ui-collapsible-content{
     padding-top: 0;

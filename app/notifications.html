@@ -343,7 +343,7 @@
         }
 
         function get_profile(){
-            var url = "http://192.168.42.233:8000/api/me/?user=" + localStorage.getItem('user_id') + "&format=json";
+            var url = "http://127.0.0.1:8000/api/me/?user=" + localStorage.getItem('user_id') + "&format=json";
 
             jQuery.ajax({
                 url: url,
