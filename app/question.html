@@ -155,34 +155,17 @@
     
     <!-- Footer -->
     <div data-role="footer" data-theme="b" data-position="fixed" data-id="footer-nav" data-tap-toggle="false">
-        {% if previous %}
-            <!-- Return to previous Question page. -->
-            <button onclick="window.location='/{{ request.language }}/quiz/{{ quiz_id }}/question/{{ previous }}/';"
-                      class="ui-btn ui-corner-all ui-icon-carat-l ui-btn-icon-left btnBack fleft m5">
-                {% trans "Back" %}
+            <button id="btnBack" class="ui-btn ui-corner-all ui-icon-carat-l ui-btn-icon-left fleft m5">
+                Back
             </button>
-        {% else %}
-            <!-- Return to Quiz home page. -->
-            <button onclick="window.location='/{{ request.language }}/quiz/{{ quiz_id }}/';"
-                      class="ui-btn ui-corner-all ui-icon-carat-l ui-btn-icon-left btnBack fleft m5">
-                {% trans "Back" %}
+
+            <button id="btnNext" class="ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-left fright m5" style="display:none;">
+                Next
             </button>
-        {% endif %}
-        
-        {% if next %}
-            <!-- Load to Next Question page. -->
-            <button onclick="ajax_submit_question(false);"
-                      class="ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-left btnNext fright m5">
-                {% trans "Next" %}
+
+            <button id="btnScore" class="fright m5 ui-btn ui-icon-check ui-btn-icon-left ui-corner-all" style="background-color:green;display:none;">
+                Score Quiz
             </button>
-        {% else %}
-            <!-- Load to Finished page. -->
-            <button onclick="ajax_submit_question(true);"
-                      class="fright m5 ui-btn ui-icon-check ui-btn-icon-left ui-corner-all"
-                      style="background-color:green;">
-                {% trans "Score Quiz" %}
-            </button>
-        {% endif %}
     </div>
     <!-- end Footer -->
 
@@ -218,6 +201,7 @@
     var question_id = 0;
     var question_type = '';
     var submit_id = 0;
+    var has_next = false;
 
     function ajax_pick(letter)
     {
@@ -264,8 +248,28 @@
             processData: false,
             type: 'GET',
             success: function(result){
-                build_quiz_ui(result.results[0]);
-                setTimeout(get_submission(result.results[0]), 300);
+                qnum++;
+
+                url = 'http://127.0.0.1:8000/api/questions/?quiz=' + qid + '&num=' + qnum + '&format=json';
+                $.ajax({
+                    url: url,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    type: 'GET',
+                    success: function(result){
+                        console.debug(result);
+                        if(result.count == 0){
+                            has_next = false;
+                        }
+                        else{
+                            has_next = true;
+                        }
+                    }
+                });
+
+                setTimeout(build_quiz_ui(result.results[0], --qnum), 300);
+                setTimeout(get_submission(result.results[0]), 1000);
             },
             error: function(xhr, status, error){
                 console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
@@ -273,7 +277,7 @@
             complete: function(xhr, status){
                 // do nothing
             }
-        })
+        });
     }
 
     function build_quiz_ui(data){
@@ -296,11 +300,28 @@
         if( data.f != '' ){
             $('#id_question')[0].innerHTML += '<li class="quiz-answer" value="f"><span>F. ' + data.f + '</span></li>';
         }
+
+        var qzid = get_get_var('qid');
+
+        if(data.num == 1){
+            $('#btnBack').attr('onclick','window.location="start.html?qid=' + qzid + '"');
+        }
+        else{
+            $('#btnBack').attr('onclick','window.location="question.html?qid=' + qzid + '&qnum=' + (data.num-1) + '"');
+        }
+
+        if(has_next){
+            $('#btnNext').attr('onclick','window.location="question.html?qid=' + qzid + '&qnum=' + (data.num+1) + '"').show();
+        }
+        else{
+            $('#btnScore').attr('onclick','window.location="finished.html?qid=' + qzid + '"').show();
+        }
+
         question_id = data.id;
         question_type = data.type;
     }
 
-    function get_submission(){
+    function get_submission(qid){
         var qzid = get_get_var('qid');
 
         var url = 'http://127.0.0.1:8000/api/question_submissions/?quiz=' + qzid + '&question=' + question_id + '&user=' + localStorage.getItem('user_id') + '&format=json';
@@ -312,34 +333,22 @@
             type: 'GET',
             success: function(result){
                 console.debug(result);
-
+                console.debug('qid:' + question_id);
                 if(result.count == 0){
-                    var data = {user:localStorage.getItem('user_id'),quiz:qzid,question:question_id,type:question_type};
-                    var type = "POST"; // Insert.
-                    var url = "http://127.0.0.1:8000/api/question_submissions/";
-
-                    jQuery.ajax({
-                        url: url,
-                        headers: {
-                            Authorization: 'Token ' + localStorage.getItem('auth_token')
-                        },
-                        data: data,
-                        type: type,
-                        traditional: true, // Note: This allows many-to-many arrays for Django REST Framework
-                        success: function(json_result){
-                            console.debug(json_result);
-                        },
-                        error: function(xhr,status,error) {
-                            // Print the error log to console.
-                            console.debug(status + ': ' + error + ' -- ' + xhr.responseText);
-
-                            // Convert JSON string into javascript associative array.
-                            var json = jQuery.parseJSON(xhr.responseText);
-                        },
-                        complete: function(xhr,status) {
-                            // Do nothing.
-                        }
-                    });
+                    set_question_submission(
+                            {user:localStorage.getItem('user_id'),quiz:qzid,question:question_id,type:question_type},
+                            function(json_result){
+                                console.debug(json_result);
+                                submit_id = json_result.id;
+                            },
+                            function(error) {
+                                // Print the error log to console.
+                                console.debug(error);
+                             }
+                    );
+                }
+                else{
+                    submit_id = result.results[0].id;
                 }
             },
             error: function(xhr, status, error){
