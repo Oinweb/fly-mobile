@@ -439,11 +439,33 @@
 .ui-content div .ui-listview{
     margin-top: 0;
 }
+.ui-content div .ui-listview li span{
+    white-space: normal;
+}
+.ui-content div .ui-listview li.quiz-answer{
+    padding:5px;
+    border: 1px solid #aaa;
+    border-top:none;
+}
+.ui-content div .ui-listview li.quiz-answer:first{
+    border-top: 1px solid #aaa;
+}
+.ui-content div .ui-listview li.quiz-answer:last-of-type{
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
 .ui-content div .ui-listview .ui-li-divider{
     background-color: #779ECB;
     color: #fff;
     text-shadow: none;
     font-size: 12pt !important;
+}
+.ui-content div .ui-listview .ui-li-divider h4{
+    background-color: #779ECB;
+    color: #fff;
+    text-shadow: none;
+    font-size: 12pt !important;
+    white-space: normal;
 }
 #course-quiz-finish .ui-content div{
     text-align:center !important;
